@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Picchiaduro tra amici</title>
+<style>
+:root{--bg:#120d0c;--ink:#f3e9dc;--mut:#a89686;--line:#3b2d27;--acc:#e8622c}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,"Segoe UI",Roboto,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:12px 16px 24px}
+#wrap{position:relative;width:100%;aspect-ratio:16/9;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#000}#wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button{min-height:44px;padding:0 14px;background:#241a16;color:var(--ink);border:1px solid var(--line);border-radius:6px;font:inherit;font-weight:600;cursor:pointer;touch-action:manipulation}
+button:hover{border-color:var(--acc)}button.main{background:var(--acc);border-color:var(--acc);color:#1b0d06}
+#touch{display:none}@media (pointer:coarse){#touch{display:flex}#touch button{flex:1;min-height:56px;user-select:none;-webkit-user-select:none;touch-action:none}}
+input{min-height:44px;width:130px;padding:0 12px;background:#1b1411;color:var(--ink);border:1px solid var(--line);border-radius:6px;font:600 16px ui-monospace,monospace;text-transform:uppercase}
+#net{color:var(--ink);font-weight:600;min-height:21px;margin:10px 0 0}
+#arenas button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#1b0d06}.fh,#fh{font:700 15px system-ui,sans-serif;margin:14px 0 0;color:var(--ink)}#fats button{background:#5a1016;border-color:#8f1d27;flex:1 1 150px}
+button kbd{font:600 12px ui-monospace,monospace;color:var(--mut);margin-left:6px}button.main kbd{color:#4a2410}
+#pad{margin:12px 0 0;color:var(--mut)}
+details{margin-top:8px;color:var(--mut)}summary{cursor:pointer;min-height:32px}
+.ov{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vmin;padding:2%;background:radial-gradient(ellipse at center,rgba(60,14,10,.9),rgba(8,4,4,.96))}.ov[hidden]{display:none}
+#seltitle{font:400 clamp(18px,3.2vw,40px)/1 Impact,"Arial Narrow",sans-serif;letter-spacing:.04em;margin:0;color:#ffd24c;text-transform:uppercase;text-align:center}
+#grid{display:grid;grid-template-columns:repeat(6,1fr);gap:clamp(4px,1vw,12px);width:min(94%,900px)}
+.card{position:relative;min-height:0;padding:0;display:flex;flex-direction:column;background:#1b1210;border:2px solid var(--line);border-radius:6px;overflow:hidden}
+.card .por{aspect-ratio:1;display:grid;place-items:center;background:#2a1a15;font:400 clamp(16px,3vw,38px) Impact,sans-serif;color:var(--mut)}.card .por img{width:100%;height:100%;object-fit:cover;display:block}
+.card .nm{font:600 clamp(9px,1.25vw,14px)/1.2 system-ui,sans-serif;padding:3px 2px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.lock{opacity:.45}.card.lock .por{background:repeating-linear-gradient(45deg,#1d1310 0 8px,#24170f 8px 16px)}
+.card .tag{display:none;position:absolute;top:3px;font:700 clamp(8px,1vw,12px)/1 system-ui;padding:2px 4px;border-radius:3px;font-style:normal}.card .t1{left:3px;background:#e0162a;color:#fff}.card .t2{right:3px;background:#2f6fe0;color:#fff}
+.card.c1{border-color:#e0162a;box-shadow:0 0 0 2px #e0162a}.card.c2{border-color:#2f6fe0}.card.c1.c2{border-color:#e0162a #2f6fe0 #2f6fe0 #e0162a}.card.c1 .t1,.card.c2 .t2{display:block}.card.p1{background:#5a1016}
+#selmsg{margin:0;color:var(--ink);min-height:1.4em;font-size:clamp(12px,1.5vw,16px);text-align:center}#selerr{margin:0;color:#ff8a7a;font-weight:600;text-align:center}
+.ov .row{display:flex;gap:8px}.pb{width:min(70%,520px);height:12px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#1b1411}.pb i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+table{border-collapse:collapse;width:100%;max-width:560px}td,th{padding:4px 12px 4px 0;text-align:left;border-bottom:1px solid var(--line);font-weight:400}th{color:var(--ink);font-weight:600}
+</style></head><body><main>
+<div id="wrap"><canvas id="c" width="1920" height="1080" aria-label="Arena di combattimento"></canvas><canvas id="o" width="1920" height="1080" aria-hidden="true"></canvas>
+<div id="sel" class="ov" hidden><h1 id="seltitle">Scegli il tuo lottatore</h1><div id="grid" role="group" aria-label="Lottatori"></div><p id="selmsg"></p><p id="selerr" aria-live="polite"></p><div class="row"><button id="selgo" class="main">Combatti</button><button id="selback" hidden>Torna all'incontro</button></div></div>
+<div id="load" class="ov" hidden><p id="loadtxt">Carico…</p><div class="pb"><i id="loadbar"></i></div></div></div>
+<h2 class="fh">Arena</h2>
+<div class="bar" id="arenas"></div>
+<h2 id="fh" class="fh">Guarda gli Accoppalo</h2>
+<div class="bar" id="fats"></div>
+<div class="bar" id="touch"></div>
+<div class="bar" id="moves"></div>
+<div class="bar" id="modes"></div>
+<div class="bar"><input id="code" maxlength="5" placeholder="Codice" aria-label="Codice partita" autocomplete="off"><button id="join">Entra con codice</button></div>
+<p id="net" aria-live="polite"></p>
+<p id="pad">Nessun controller rilevato: collegalo e premi un tasto.</p>
+<details><summary>Comandi</summary><table>
+<tr><th>Azione</th><th>Tastiera</th><th>PS4</th></tr>
+<tr><td>Muoversi, saltare, abbassarsi</td><td>A D W S</td><td>Croce direzionale o levetta</td></tr>
+<tr><td>Pugno rapido</td><td>J</td><td>Quadrato</td></tr>
+<tr><td>Pugno pesante</td><td>I</td><td>Triangolo</td></tr>
+<tr><td>Calcio (da abbassato: spazzata)</td><td>K</td><td>X</td></tr>
+<tr><td>Colpo speciale, poi Accoppalo a fine incontro (dopo FINISCILO!)</td><td>L</td><td>Cerchio</td></tr>
+<tr><td>Parata</td><td>Spazio</td><td>R1</td></tr>
+<tr><td>Ricomincia</td><td>R</td><td>Options</td></tr>
+<tr><td>Scelta lottatore: muoversi, confermare, indietro</td><td>A D W S, J o Invio, K o Esc</td><td>Croce, X, Cerchio</td></tr>
+</table></details>
+</main>
+<script src="js/three-gltf.js"></script>
+<script src="js/peerjs.min.js"></script>
+<script src="js/lottatori.js"></script>
+<script src="js/selezione.js"></script>
+<script src="js/gioco.js"></script>
+</body></html>

@@ -1,0 +1,7 @@
+{"nota":"12 caselle della schermata di scelta. tipo: glb (Meshy, riggato) oppure hy3d (vecchio formato). Le caselle senza id sono 'In arrivo'. Campi facoltativi per i GLB: alta (texture 4K in alta/), altezza (1 = normale), ruota (gradi), ossa (nomi delle ossa se non riconosciute), viso {occhi, bocca, distanza} per il coltello, pugni.",
+ "lottatori":[
+  {"id":"giacca","nome":"Giacca","cartella":"giacca-meshy","tipo":"glb","alta":true,"ritratto":"ritratto.jpg"},
+  {"id":"chef","nome":"Chef","cartella":"chef","tipo":"glb","alta":true,"ritratto":"ritratto.jpg"},
+  {"nome":"In arrivo"},{"nome":"In arrivo"},{"nome":"In arrivo"},{"nome":"In arrivo"},
+  {"nome":"In arrivo"},{"nome":"In arrivo"},{"nome":"In arrivo"},{"nome":"In arrivo"},{"nome":"In arrivo"},{"nome":"In arrivo"}
+ ]}
