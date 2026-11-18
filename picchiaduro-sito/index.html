@@ -5,7 +5,7 @@
 @font-face{font-family:'Metal Mania';src:url(font/metal-mania.woff2) format('woff2');font-display:swap}
 :root{--bg:#120d0c;--ink:#f3e9dc;--mut:#a89686;--line:#3b2d27;--acc:#e8622c}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,"Segoe UI",Roboto,sans-serif}
-main{max-width:1180px;margin:0 auto;padding:12px 16px 24px}
+main{max-width:min(1180px,calc((100vh - 28px)*16/9));margin:0 auto;padding:12px 16px}
 #wrap{position:relative;width:100%;aspect-ratio:16/9;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#000}#wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 button{min-height:44px;padding:0 14px;background:#241a16;color:var(--ink);border:1px solid var(--line);border-radius:6px;font:inherit;font-weight:600;cursor:pointer;touch-action:manipulation}
@@ -115,11 +115,12 @@ table{border-collapse:collapse;width:100%;max-width:560px}td,th{padding:4px 12px
 <div id="honline" hidden><input id="hcode" maxlength="5" placeholder="Codice" aria-label="Codice partita" autocomplete="off"><button id="hjoin">Entra</button><span id="hnet" aria-live="polite"></span></div><p class="hhint">W S per scegliere · J o Invio per confermare · K o Esc per tornare</p></div>
 <div id="pausa" class="ov" hidden><h2>Pausa</h2><div id="pmenu"></div></div><div id="cfg" class="ov" hidden><h2>Comandi</h2><div id="cfgt"></div><p id="cfgmsg"></p><div class="row"><button id="cfgreset">Ripristina</button><button id="cfgclose" class="main">Fatto</button></div></div>
 <div id="load" class="ov" hidden><p id="loadtxt">Carico…</p><div class="pb"><i id="loadbar"></i></div></div></div>
+<div class="bar" id="touch"></div>
+<div id="extra" hidden>
 <h2 class="fh">Arena</h2>
 <div class="bar" id="arenas"></div>
 <h2 id="fh" class="fh">Guarda gli Accoppalo</h2>
 <div class="bar" id="fats"></div>
-<div class="bar" id="touch"></div>
 <div class="bar" id="moves"></div>
 <div class="bar" id="modes"></div>
 <div class="bar"><input id="code" maxlength="5" placeholder="Codice" aria-label="Codice partita" autocomplete="off"><button id="join">Entra con codice</button></div>
@@ -127,6 +128,8 @@ table{border-collapse:collapse;width:100%;max-width:560px}td,th{padding:4px 12px
 <p id="pad">Nessun controller rilevato: collegalo e premi un tasto.</p>
 <details><summary>Comandi</summary><table id="help"></table></details>
 <p class="cred">Suoni: Oculus Audio Pack (Meta, CC BY 4.0) e raccolte CC0 da opengameart.org. Font: Metal Mania (SIL OFL). Motion capture: CMU Graphics Lab.</p>
+</div>
+<script>if(window.__test||/[?&]dev\b/.test(location.search))document.getElementById('extra').hidden=false</script>
 </main>
 <script defer src="js/three-gltf.js"></script>
 <script defer src="js/lottatori.js"></script>

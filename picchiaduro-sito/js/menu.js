@@ -1,7 +1,7 @@
 // menu.js: schermata iniziale (logo 3D su sfondo di fiamme, menu da picchiaduro) e pannello "Comandi" per cambiare tasti e pulsanti.
 // Solo interfaccia: non tocca la logica della partita.
 const HOME={open:false,cfg:false,panel:'main',cur:0,items:[],t:0,pad:{},rep:0,sc:null,wait:null};
-const AZIONI=[['left','Sinistra'],['right','Destra'],['up','Salto'],['down','Giù'],['jab','Pugno rapido'],['cross','Pugno pesante'],['kick','Calcio'],['special','Colpo speciale'],['block','Parata'],['reset','Ricomincia'],['fat','Accoppalo (insieme a Pugno rapido)']];
+const AZIONI=[['left','Sinistra'],['right','Destra'],['up','Salto'],['down','Giù'],['jab','Pugno rapido'],['cross','Pugno pesante'],['kick','Calcio'],['special','Calcio basso'],['block','Parata'],['reset','Ricomincia'],['fat','Accoppalo (insieme a Pugno rapido)']];
 const PADN=['X','Cerchio','Quadrato','Triangolo','L1','R1','L2','R2','Share','Options','L3','R3','Croce su','Croce giù','Croce sinistra','Croce destra','PS','Touchpad'];
 const keyName=c=>!c?'—':({Space:'Spazio',ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',Enter:'Invio',ShiftLeft:'Maiusc sin.',ShiftRight:'Maiusc des.',ControlLeft:'Ctrl sin.',ControlRight:'Ctrl des.',AltLeft:'Alt',AltRight:'Alt Gr',Backspace:'Backspace',Tab:'Tab',Comma:',',Period:'.',Slash:'/',Semicolon:';',Quote:"'",BracketLeft:'[',BracketRight:']',Minus:'-',Equal:'=',Backquote:'`',Backslash:'\\'})[c]||c.replace(/^Key/,'').replace(/^Digit/,'').replace(/^Numpad/,'Tn ');
 const padBtnName=n=>PADN[n]||('Pulsante '+n);
@@ -66,8 +66,8 @@ function cfgReset(){for(const a in KEYDEF){CFG.k[a]=KEYDEF[a].slice();CFG.p[a]=P
 function drawHelp(){const K=a=>CFG.k[a].map(keyName).join(' o ')||'—',Pd=a=>padBtnName(CFG.p[a]),t=$('help');if(!t)return;const rows=[['Azione','Tastiera','Controller'],
  ['Muoversi',[K('left'),K('right')].join(' · '),Pd('left')+', '+Pd('right')+' o levetta'],['Saltare, abbassarsi',K('up')+' · '+K('down'),Pd('up')+', '+Pd('down')+' o levetta'],
  ['Corsa','due volte avanti (e tieni premuto)','due volte avanti'],['Scatto indietro','due volte indietro','due volte indietro'],
- ['Pugno rapido',K('jab'),Pd('jab')],['Pugno pesante',K('cross'),Pd('cross')],['Calcio (da abbassato: spazzata)',K('kick'),Pd('kick')],['Colpo speciale',K('special'),Pd('special')],['Parata',K('block'),Pd('block')],
- ['Ruota con calcio e calcio volante','avanti + '+K('kick'),'avanti + '+Pd('kick')],['Raffica di pugni','avanti + '+K('jab'),'avanti + '+Pd('jab')],
+ ['Pugno rapido',K('jab'),Pd('jab')],['Pugno pesante',K('cross'),Pd('cross')],['Calcio',K('kick'),Pd('kick')],['Calcio basso',K('special')+' (o giù + '+K('kick')+')',Pd('special')+' (o giù + '+Pd('kick')+')'],['Parata',K('block'),Pd('block')],
+ ['Ruota con calcio e calcio volante','indietro + '+K('kick'),'indietro (levetta o croce) + '+Pd('kick')],['Raffica di pugni',K('jab')+', '+K('jab')+', '+K('cross'),Pd('jab')+', '+Pd('jab')+', '+Pd('cross')],
  ['Accoppalo: dopo il K.O. del terzo round vinto, entro 5 secondi',K('fat')+' + '+K('jab'),'R2 + Quadrato'],['Pausa','Esc o P','Options (Start)'],['Ballo a fine Accoppalo',K('down'),Pd('down')],
  ['Ricomincia',K('reset'),Pd('reset')],['Nei menu: muoversi, confermare, indietro','W A S D, J o Invio, K o Esc','Croce, X, Cerchio']];
  t.textContent='';rows.forEach((r,i)=>{const tr=document.createElement('tr');for(const c of r){const d=document.createElement(i?'td':'th');d.textContent=c;tr.append(d)}t.append(tr)});

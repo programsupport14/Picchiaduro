@@ -18,7 +18,7 @@ function drawSel(){if(!ROSTER.length)return;const st=SEL.step,cpu=mode==='cpu'||
  const e=ROSTER[SEL.cur[Math.min(st,1)]],ok=e&&e.id&&!e.bloccato;
  $('seltitle').textContent=st===2?"Scegli l'arena":mode==='online'?'Scegli il tuo lottatore':st===0?(mode==='2p'?'Giocatore 1':'Scegli il tuo lottatore'):(mode==='2p'?'Giocatore 2':"Scegli l'avversario");
  $('selmsg').textContent=st===2?ARENE[SEL.cur[2]].nome+'  ·  Esc o Cerchio per tornare indietro':(ok?(e.descrizione||''):'Questo lottatore arriverà presto.')+(st===1?'  Esc o Cerchio per tornare indietro':'');
- $('selback').hidden=false;$('selback').textContent=st>0?'Indietro':p1&&mode!=='online'?"Torna all'incontro":'Menu';$('selgo').textContent=st===2||mode==='online'?'Combatti':'Avanti'}
+ $('selback').hidden=false;$('selback').textContent=st>0?'Indietro':p1&&mode!=='online'?"Torna all'incontro":'Menu';$('selgo').textContent=st===2&&mode!=='online'?'Combatti':'Avanti'}
 function openSel(){if(net)return;SEL.open=true;SEL.pick=[null,null];SEL.step=0;const a=ROSTER.findIndex(e=>e&&e.id&&!e.bloccato);SEL.cur=[Math.max(0,a),Math.max(0,a),Math.max(0,ARENE.findIndex(x=>x.id===selArena))];$('sel').hidden=false;$('selerr').textContent='';drawSel();$('wrap').scrollIntoView({block:'nearest'})}
 function closeSel(){SEL.open=false;$('sel').hidden=true}
 const selOpen=()=>SEL.open||SEL.vs||HOME.open||HOME.cfg||(typeof PAUSE!=='undefined'&&PAUSE.open&&!net);
@@ -26,13 +26,12 @@ function showSelErr(e){SEL.vs=false;$('vs').hidden=true;$('sel').hidden=false;$(
 function selMove(pl,dx,dy){if(SEL.step===2){const n=ARENE.length;SEL.cur[2]=(SEL.cur[2]+(dx||dy)+n)%n}else{let i=SEL.cur[pl],c=i%COLS,r=Math.floor(i/COLS);c=(c+dx+COLS)%COLS;r=(r+dy+ROWS)%ROWS;SEL.cur[pl]=r*COLS+c}sfx('ui_muovi');drawSel()}
 function showVS(ids){const E=ids.map(rosterEntry);for(let i=0;i<2;i++){const im=$('vf'+(i+1));if(E[i]&&E[i].figura)im.src=fdir(E[i])+E[i].figura;else im.removeAttribute('src');$('vn'+(i+1)).textContent=E[i]?E[i].nome:''}$('vsbar').style.width='0';$('vstxt').textContent='';SEL.vs=true;const v=$('vs');v.hidden=true;void v.offsetWidth;v.hidden=false;sfx('vs')}
 function selConfirm(){if(!ROSTER.length||loading||SEL.vs)return;const pl=SEL.step;wake();
- if(pl===2){const A=ARENE[SEL.cur[2]];selArena=A.id;markArena(A.id);sfx('ui_ok');const ids=[SEL.pick[0],SEL.pick[1]],t0=performance.now();$('sel').hidden=true;showVS(ids);
+ if(pl===2){const A=ARENE[SEL.cur[2]];selArena=A.id;markArena(A.id);sfx('ui_ok');if(mode==='online'){closeSel();openHome('online');setOnline('Lottatore: '+(rosterEntry(SEL.pick[0])||{}).nome+' · Arena: '+A.nome+'. Crea una partita o entra con un codice (si gioca nell\'arena di chi crea la partita).');return}const ids=[SEL.pick[0],SEL.pick[1]],t0=performance.now();$('sel').hidden=true;showVS(ids);
   startMatch(ids,selArena).then(()=>new Promise(r=>setTimeout(r,window.__test?0:Math.max(0,2400-(performance.now()-t0))))).then(()=>{SEL.vs=false;$('vs').hidden=true;reset()}).catch(()=>{});return}
  const e=ROSTER[SEL.cur[pl]];if(!e||!e.id||e.bloccato){$('selmsg').textContent='Questo lottatore arriverà presto: scegline un altro.';sfx('ui_no');return}
  SEL.pick[pl]=e.id;sfx('ui_ok');
- if(mode==='online'){drawSel();closeSel();openHome('online');setOnline('Lottatore scelto: '+e.nome+'. Crea una partita o entra con un codice.');return}
- if(pl===0){SEL.step=1;SEL.cur[1]=SEL.cur[0]}else SEL.step=2;drawSel()}
-function selBack(){if(SEL.vs)return;sfx('ui_no');if(SEL.step===2){SEL.step=1;SEL.pick[1]=null;drawSel()}else if(SEL.step===1){SEL.step=0;SEL.pick=[null,null];drawSel()}else if(p1&&mode!=='online')closeSel();else{closeSel();openHome(mode==='online'?'online':'main')}}
+ if(pl===0&&mode!=='online'){SEL.step=1;SEL.cur[1]=SEL.cur[0]}else SEL.step=2;drawSel()}
+function selBack(){if(SEL.vs)return;sfx('ui_no');if(SEL.step===2){SEL.step=mode==='online'?0:1;if(mode==='online')SEL.pick=[null,null];else SEL.pick[1]=null;drawSel()}else if(SEL.step===1){SEL.step=0;SEL.pick=[null,null];drawSel()}else if(p1&&mode!=='online')closeSel();else{closeSel();openHome(mode==='online'?'online':'main')}}
 function selKey(e){if(e.target.tagName==='INPUT')return;const k=e.code,mv={KeyA:[-1,0],ArrowLeft:[-1,0],KeyD:[1,0],ArrowRight:[1,0],KeyW:[0,-1],ArrowUp:[0,-1],KeyS:[0,1],ArrowDown:[0,1]}[k];
  if(mv){e.preventDefault();selMove(Math.min(1,SEL.step),...mv)}else if(k==='KeyJ'||k==='Enter'||k==='Space'){e.preventDefault();selConfirm()}else if(k==='KeyK'||k==='Escape'||k==='Backspace'){e.preventDefault();selBack()}}
 // controller: croce o levetta per muoversi, X per confermare, Cerchio per tornare indietro. Con due controller il secondo sceglie il lottatore 2.
