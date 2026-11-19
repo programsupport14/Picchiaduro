@@ -1,3 +1,5 @@
+// KA: regolazioni gambe (punta del ginocchio, parata: bacino indietro/giù, coscia, stinco)
+const KA={kmax:18,toe:.3,bz:.09,by:.025,bt:.15,bs:.2};
 // animazione.js: strato visivo sopra la logica 2D. Sceglie per ogni lottatore tra motion capture (CMU), pose procedurali
 // e ragdoll, con dissolvenze, poi aggiunge le reazioni ai colpi. Non cambia la simulazione: l'online resta deterministico.
 let MOCAP=null;const AK=['hips','spine','neck','head','uR','lR','tR','sR','fR','uL','lL','tL','sL','fL'];
@@ -159,9 +161,9 @@ function animLayer(c,R,M,PROC,px,py,pz){
    for(const sd of'RL'){const sx=sd==='R'?-1:1,ld=sd===lead;
     if(ld){anV.set(sx*.1,-.5+.3*lo,.86-ib*.6);anV2.set(-sx*.12-lo*sx*.1,.9-1.05*lo,.42-ib*1.3+.5*lo)}else{anV.set(sx*.22,-.74,.62-ib*.3);anV2.set(-sx*.28,.95,.16-ib*.9)}
     const wa=cb?w:ld?lo*w:0;if(wa>.001){anV.normalize().applyQuaternion(FIN.spine);inQ.setFromUnitVectors(DIRS['u'+sd],anV);FIN['u'+sd].slerp(inQ,wa);anV2.normalize().applyQuaternion(FIN.spine);inQ.setFromUnitVectors(DIRS['l'+sd],anV2);FIN['l'+sd].slerp(inQ,wa)}}
-   const kn=Math.max(0,ib)*w;fHip.z-=.09*ib*w;fHip.y-=.025*kn;for(const sd of'RL'){FIN['t'+sd].premultiply(RX.setFromEuler(qe.set(-.15*kn,0,0)));FIN['s'+sd].premultiply(RX.setFromEuler(qe.set(.2*kn,0,0)))}}}
+   const kn=Math.max(0,ib)*w;fHip.z-=KA.bz*ib*w;fHip.y-=KA.by*kn;for(const sd of'RL'){FIN['t'+sd].premultiply(RX.setFromEuler(qe.set(-KA.bt*kn,0,0)));FIN['s'+sd].premultiply(RX.setFromEuler(qe.set(KA.bs*kn,0,0)))}}}
  // 6b) ginocchia: la clip di guardia le piega molto (il ginocchio va avanti oltre la punta del piede): in guardia, camminando e in parata la gamba si raddrizza in parte
- if(live&&c.y===0&&!c.crouch&&!c.ko&&(isG||src==='block')){const k=(src==='block'?.5:.38*A.sw);for(const sd of'RL')FIN['s'+sd].slerp(FIN['t'+sd],k)}
+ if(live&&c.y===0&&!c.crouch&&!c.ko&&(isG||src==='block')){const k=(src==='block'?.7:.65*A.sw);for(const sd of'RL')FIN['s'+sd].slerp(FIN['t'+sd],k)}
  // 7) spalle: clavicole alzate e portate avanti (i modelli in posa ad A le hanno cadenti)
  if(M.clav){const k=src==='rag'?0:live?(.55+.45*Math.max(A.gw,A.bw)):.5;for(const sd of'RL'){const sx=sd==='R'?-1:1,a=(M.clav[sd]||0)*k;(FIN['c'+sd]||(FIN['c'+sd]=new THREE.Quaternion())).copy(FIN.spine).multiply(RX.setFromEuler(qe.set(0,-sx*a*.45,sx*a)))}}
  // piedi a terra: ogni scheletro ha la caviglia a un'altezza diversa; misuro una volta in guardia di quanto il piede sta sotto (o sopra) la sua altezza di riposo e correggo il bacino
@@ -171,6 +173,7 @@ function animLayer(c,R,M,PROC,px,py,pz){
  if(A.cw>.001&&A.cD>0&&M.J&&R.B.fR&&R.B.fL){R.G.updateMatrixWorld(true);const sy=R.G.scale.y;for(const sd of'RL'){const p=R.B['f'+sd].getWorldPosition(new THREE.Vector3());p.y+=A.cD*sy;{const hp=R.B['t'+sd].getWorldPosition(new THREE.Vector3()),u=.38*A.cw;p.x+=(hp.x-p.x)*u;p.z+=(hp.z-p.z)*u}legTo(R,FIN,sd,p,new THREE.Vector3(sd==='R'?-.3:.3,.9,1))}applyPose(R,FIN)}
  // dopo un colpo nessun piede deve restare sospeso: se entrambi i piedi sono sopra il pavimento il bacino scende finché il più basso appoggia
  if(live&&c.y===0&&!c.ko&&M.J&&R.B.fR&&R.B.fL&&c.m!=='flykick'&&!(c.m==='jump')){R.G.updateMatrixWorld(true);const sy=R.G.scale.y,ly=sd=>(R.B['f'+sd].getWorldPosition(anV).y-R.G.position.y)/sy-M.J['f'+sd].y,lo=Math.min(ly('R'),ly('L'));if(lo>.004){fHip.y-=Math.min(lo,.18);R.setHips(fHip.x,fHip.y,fHip.z)}}
+ if(live&&c.y===0&&!c.crouch&&!c.ko&&!c.fpose&&(isG||src==='block')&&M.J&&R.B.fR&&R.B.fL)kneeAlign(R,FIN,src==='block'?.9:.85*A.sw);
  if(M.footFix!=null)footIK(c,R,M,A,FIN,dt,live&&c.y===0&&!c.ko);
  if(M.footFix==null&&src==='guard'&&c.y===0&&!c.rx&&!c.crouch&&A.sw>.98&&A.hx.lengthSq()<1e-5&&M.J&&R.B.fR&&R.B.fL){R.G.updateMatrixWorld(true);const ly=b=>(b.getWorldPosition(anV).y-R.G.position.y)/R.G.scale.y;M.footFix=Math.max(-.3,Math.min(.3,Math.min(M.J.fR.y,M.J.fL.y)-Math.min(ly(R.B.fR),ly(R.B.fL))+.02))}}
 // ---------- piedi piantati: IK a due ossa sulle gambe (solo grafica). Il piede in appoggio resta fermo nel mondo mentre bacino e busto si muovono:
@@ -178,18 +181,32 @@ function animLayer(c,R,M,PROC,px,py,pz){
 const ikH=new THREE.Vector3(),ikK=new THREE.Vector3(),ikF=new THREE.Vector3(),ikT=new THREE.Vector3(),ikD=new THREE.Vector3(),ikP=new THREE.Vector3(),ikN=new THREE.Vector3(),ikA=new THREE.Vector3(),ikB=new THREE.Vector3(),ikQ=new THREE.Quaternion(),ikG=new THREE.Quaternion(),ikGi=new THREE.Quaternion();
 function footIK(c,R,M,A,FIN,dt,on){const B=R.B;if(!M.J||!B.tR||!B.sR||!B.fR||!B.tL||!B.sL||!B.fL)return;const I=A.ik||(A.ik={R:{off:new THREE.Vector3(),lock:null},L:{off:new THREE.Vector3(),lock:null},f:c.f});
  if(I.f!==c.f){I.f=c.f;for(const sd of'RL'){I[sd].lock=null;I[sd].off.set(0,0,0)}}
- R.G.updateMatrixWorld(true);R.G.getWorldQuaternion(ikG);ikGi.copy(ikG).invert();const sy=R.G.scale.y,MAX=.42*sy;let any=false;
+ R.G.updateMatrixWorld(true);R.G.getWorldQuaternion(ikG);ikGi.copy(ikG).invert();const sy=R.G.scale.y,MAX=.42*sy,lim=on&&!c.crouch&&!c.ko&&!c.fpose&&(!c.m||c.m==='block'||c.m==='hurt')?KA.kmax*Math.PI/180:0;let any=false;
  for(const sd of'RL'){const S=I[sd];B['t'+sd].getWorldPosition(ikH);B['s'+sd].getWorldPosition(ikK);B['f'+sd].getWorldPosition(ikF);const gy=R.G.position.y+(M.J['f'+sd].y+.02)*sy,pl=on&&ikF.y<gy+.045*sy;
   if(dt>0){if(pl){if(!S.lock)S.lock=new THREE.Vector3(ikF.x+S.off.x,gy,ikF.z+S.off.z);S.off.set(S.lock.x-ikF.x,S.off.y+(gy-ikF.y-S.off.y)*(1-Math.pow(.5,dt)),S.lock.z-ikF.z);const h=Math.hypot(S.off.x,S.off.z);if(h>MAX){const k=MAX/h;S.off.x*=k;S.off.z*=k;S.lock.x=ikF.x+S.off.x;S.lock.z=ikF.z+S.off.z}}
    else{S.lock=null;S.off.multiplyScalar(Math.pow(.76,dt))}}
   if(S.off.lengthSq()<1e-6)continue;
-  ikT.copy(ikF).add(S.off);const a=ikH.distanceTo(ikK),b=ikK.distanceTo(ikF);ikD.copy(ikT).sub(ikH);let d=ikD.length();if(d<1e-4||a<1e-4||b<1e-4)continue;ikD.multiplyScalar(1/d);d=Math.max(Math.abs(a-b)+.002*sy,Math.min(a+b-.002*sy,d));
+  ikT.copy(ikF).add(S.off);const a=ikH.distanceTo(ikK),b=ikK.distanceTo(ikF);
+  // ginocchio al massimo KA.kmax gradi in guardia/parata: se il piede bloccato costringerebbe a piegarlo di più, il piede scivola un poco in fuori
+  if(lim&&S.lock){const dmin=Math.sqrt(a*a+b*b+2*a*b*Math.cos(lim)),dy=ikT.y-ikH.y;ikD.copy(ikT).sub(ikH);if(ikD.length()<dmin){ikB.set(ikD.x,0,ikD.z);const L=Math.sqrt(Math.max(0,dmin*dmin-dy*dy));if(ikB.lengthSq()<1e-8)ikB.set(0,0,1).applyQuaternion(ikG);ikB.normalize();const nx=ikH.x+ikB.x*L,nz=ikH.z+ikB.z*L;S.lock.x+=nx-ikT.x;S.lock.z+=nz-ikT.z;S.off.x+=nx-ikT.x;S.off.z+=nz-ikT.z;ikT.x=nx;ikT.z=nz}}
+  ikD.copy(ikT).sub(ikH);let d=ikD.length();if(d<1e-4||a<1e-4||b<1e-4)continue;ikD.multiplyScalar(1/d);d=Math.max(Math.abs(a-b)+.002*sy,Math.min(a+b-.002*sy,d));
   ikP.copy(ikK).sub(ikH);ikP.addScaledVector(ikD,-ikP.dot(ikD));if(ikP.lengthSq()<1e-8*sy*sy){ikP.set(0,0,1).applyQuaternion(ikG);ikP.addScaledVector(ikD,-ikP.dot(ikD))}ikP.normalize();
   const x=(a*a-b*b+d*d)/(2*d),h=Math.sqrt(Math.max(0,a*a-x*x));ikN.copy(ikH).addScaledVector(ikD,x).addScaledVector(ikP,h);ikT.copy(ikH).addScaledVector(ikD,d);
   ikA.copy(ikK).sub(ikH).normalize();ikB.copy(ikN).sub(ikH).normalize();ikQ.setFromUnitVectors(ikA,ikB).premultiply(ikGi).multiply(ikG);FIN['t'+sd].premultiply(ikQ);
   ikA.copy(ikF).sub(ikK).normalize();ikB.copy(ikT).sub(ikN).normalize();ikQ.setFromUnitVectors(ikA,ikB).premultiply(ikGi).multiply(ikG);FIN['s'+sd].premultiply(ikQ);any=true}
  if(any)applyPose(R,FIN)}
 // due ossa (coscia, stinco): porta la caviglia sul punto p (mondo), il ginocchio resta dalla parte dove già piega
+// ginocchia verso la punta del piede: la clip di guardia le porta in dentro (gamba "a X"). Si ruota la coscia attorno all'asse anca-caviglia:
+// il piede resta dov'è, cambia solo da che parte guarda il ginocchio (verso la punta del piede, un po' in fuori).
+const kaF=new THREE.Quaternion(),kaV=new THREE.Vector3(),kaO=new THREE.Vector3();
+function kneeAlign(R,FIN,k){if(k<=.001)return;const B=R.B;R.G.updateMatrixWorld(true);R.G.getWorldQuaternion(ikG);ikGi.copy(ikG).invert();const hc=B.hips.getWorldPosition(kaO).clone();let any=false;
+ for(const sd of'RL'){B['t'+sd].getWorldPosition(ikH);B['s'+sd].getWorldPosition(ikK);B['f'+sd].getWorldPosition(ikF);ikD.copy(ikF).sub(ikH);const d=ikD.length();if(d<1e-4)continue;ikD.multiplyScalar(1/d);
+  ikA.copy(ikK).sub(ikH);ikA.addScaledVector(ikD,-ikA.dot(ikD));if(ikA.lengthSq()<1e-8)continue;ikA.normalize();
+  B['f'+sd].getWorldQuaternion(kaF);kaV.set(0,0,1).applyQuaternion(kaF);kaV.y=0;if(kaV.lengthSq()<1e-6)kaV.set(0,0,1);kaV.normalize();ikB.set(0,0,1).applyQuaternion(ikG);ikB.y=0;ikB.normalize();kaV.multiplyScalar(KA.toe).addScaledVector(ikB,1-KA.toe);// metà punta del piede, metà verso l'avversario
+  kaV.addScaledVector(ikD,-kaV.dot(ikD));if(kaV.lengthSq()<1e-8)continue;kaV.normalize();
+  let ang=Math.acos(Math.max(-1,Math.min(1,ikA.dot(kaV))));ikN.crossVectors(ikA,kaV);if(ikN.dot(ikD)<0)ang=-ang;ang*=k;if(Math.abs(ang)<.01)continue;
+  ikQ.setFromAxisAngle(ikD,ang).premultiply(ikGi).multiply(ikG);FIN['t'+sd].premultiply(ikQ);FIN['s'+sd].premultiply(ikQ);any=true}
+ if(any)applyPose(R,FIN)}
 function legTo(R,FIN,sd,p,pole){const B=R.B;R.G.updateMatrixWorld(true);R.G.getWorldQuaternion(ikG);ikGi.copy(ikG).invert();const sy=R.G.scale.y;B['t'+sd].getWorldPosition(ikH);B['s'+sd].getWorldPosition(ikK);B['f'+sd].getWorldPosition(ikF);
  const a=ikH.distanceTo(ikK),b=ikK.distanceTo(ikF);ikD.copy(p).sub(ikH);let d=ikD.length();if(d<1e-4||a<1e-4||b<1e-4)return;ikD.multiplyScalar(1/d);d=Math.max(Math.abs(a-b)+.002*sy,Math.min(a+b-.002*sy,d));
  if(pole)ikP.copy(pole).applyQuaternion(ikG);else ikP.copy(ikK).sub(ikH);ikP.addScaledVector(ikD,-ikP.dot(ikD));if(ikP.lengthSq()<1e-8){ikP.set(0,0,1).applyQuaternion(ikG);ikP.addScaledVector(ikD,-ikP.dot(ikD))}ikP.normalize();
