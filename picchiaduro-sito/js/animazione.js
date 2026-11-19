@@ -159,7 +159,9 @@ function animLayer(c,R,M,PROC,px,py,pz){
    for(const sd of'RL'){const sx=sd==='R'?-1:1,ld=sd===lead;
     if(ld){anV.set(sx*.1,-.5+.3*lo,.86-ib*.6);anV2.set(-sx*.12-lo*sx*.1,.9-1.05*lo,.42-ib*1.3+.5*lo)}else{anV.set(sx*.22,-.74,.62-ib*.3);anV2.set(-sx*.28,.95,.16-ib*.9)}
     const wa=cb?w:ld?lo*w:0;if(wa>.001){anV.normalize().applyQuaternion(FIN.spine);inQ.setFromUnitVectors(DIRS['u'+sd],anV);FIN['u'+sd].slerp(inQ,wa);anV2.normalize().applyQuaternion(FIN.spine);inQ.setFromUnitVectors(DIRS['l'+sd],anV2);FIN['l'+sd].slerp(inQ,wa)}}
-   const kn=Math.max(0,ib)*w;fHip.z-=.09*ib*w;fHip.y-=.05*kn;for(const sd of'RL'){FIN['t'+sd].premultiply(RX.setFromEuler(qe.set(-.3*kn,0,0)));FIN['s'+sd].premultiply(RX.setFromEuler(qe.set(.42*kn,0,0)))}}}
+   const kn=Math.max(0,ib)*w;fHip.z-=.09*ib*w;fHip.y-=.025*kn;for(const sd of'RL'){FIN['t'+sd].premultiply(RX.setFromEuler(qe.set(-.15*kn,0,0)));FIN['s'+sd].premultiply(RX.setFromEuler(qe.set(.2*kn,0,0)))}}}
+ // 6b) ginocchia: la clip di guardia le piega molto (il ginocchio va avanti oltre la punta del piede): in guardia, camminando e in parata la gamba si raddrizza in parte
+ if(live&&c.y===0&&!c.crouch&&!c.ko&&(isG||src==='block')){const k=(src==='block'?.5:.38*A.sw);for(const sd of'RL')FIN['s'+sd].slerp(FIN['t'+sd],k)}
  // 7) spalle: clavicole alzate e portate avanti (i modelli in posa ad A le hanno cadenti)
  if(M.clav){const k=src==='rag'?0:live?(.55+.45*Math.max(A.gw,A.bw)):.5;for(const sd of'RL'){const sx=sd==='R'?-1:1,a=(M.clav[sd]||0)*k;(FIN['c'+sd]||(FIN['c'+sd]=new THREE.Quaternion())).copy(FIN.spine).multiply(RX.setFromEuler(qe.set(0,-sx*a*.45,sx*a)))}}
  // piedi a terra: ogni scheletro ha la caviglia a un'altezza diversa; misuro una volta in guardia di quanto il piede sta sotto (o sopra) la sua altezza di riposo e correggo il bacino
