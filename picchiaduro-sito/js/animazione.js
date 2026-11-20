@@ -74,7 +74,7 @@ function animLayer(c,R,M,PROC,px,py,pz){
   // K.O. di fine round: crollo vero in motion capture (ginocchia, poi a faccia in giù); la spazzata invece fa cadere di schiena col ragdoll
   if(c.m==='ko'&&c.kc&&MOCAP.scossa&&!(c.rx&&c.rx.zone===2&&tick-c.rx.tick<40)){clip=MOCAP.scossa;const u=tick-c.kc;f=Math.min(clip.n-1,94+u*.42);fp=Math.max(94,f-.42);src='kof';A.blend=11}
   else if(c.m==='ko'){if(!A.rag)A.rag=ragInit(c,R);if(A.rag)src='rag'}
-  else if(c.m&&MOVECLIP[c.m]){const mc=MOVECLIP[c.m];clip=MOCAP[mc.c];{const L=moveLen(c.m);f=mc.lin?c.t/L*(clip.n-1):warpT(c.t,L,mc.hit,clip);fp=mc.lin?(c.t-1)/L*(clip.n-1):warpT(c.t-1,L,mc.hit,clip)}src=mc.c+'#'+c.mseq;A.blend=5}
+  else if(c.m&&MOVECLIP[c.m]){const mc=MOVECLIP[c.m];clip=MOCAP[mc.c];{const L=moveLen(c.m);f=mc.lin?c.t/L*(clip.n-1):warpT(c.t,L,mc.hit,clip);fp=mc.lin?(c.t-1)/L*(clip.n-1):warpT(c.t-1,L,mc.hit,clip)}src=mc.c+'#'+c.mseq;A.blend=c.m==='jab'||c.m==='special'?8:5}
   else if(!c.m||c.m==='hurt'){
    if(c.y<0){if(!A.air){A.air=tick;A.jd=Math.abs(c.vx)>1?Math.sign(c.vx*c.f):0}clip=MOCAP.jump;f=Math.min(clip.n-1,(tick-A.air)/40*(clip.n-1));fp=f-(clip.n-1)/40;src='jump'+A.air;A.blend=6}
    else{if(A.air){A.land=tick;A.air=0}if(!(c.block&&!c.m))A.bk=0;

@@ -229,7 +229,7 @@ function buildHeart(){const G=new THREE.Group(),tex=canvasTex(256,256,b=>{const 
  const tube=(pts,r,mt)=>{const V=pts.map(p=>new THREE.Vector3(p[0],p[1],p[2])),o=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(V),14,r,10,false),mt);o.castShadow=true;G.add(o);const e=V[V.length-1],d=e.clone().sub(V[V.length-2]).normalize(),cap=new THREE.Mesh(new THREE.CircleGeometry(r*.8,10),dk);cap.position.copy(e).addScaledVector(d,.01);cap.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),d);G.add(cap)};
  tube([[.05,.7,.05],[.1,1.25,0],[-.15,1.6,-.1],[-.55,1.65,-.2]],.24,vm);tube([[-.3,.75,.3],[-.5,1.15,.3],[-.8,1.3,.15]],.2,vbl);tube([[.55,.7,-.1],[.62,1.2,-.15],[.6,1.5,-.15]],.17,vbl);tube([[.3,.6,-.5],[.7,.75,-.7]],.11,vb);tube([[-.35,.6,-.5],[-.75,.8,-.65]],.11,vb);
  G.userData={body,ao:new THREE.Vector3(-.55,1.65,-.2)};G.visible=false;scene.add(G);return G}
-function fHeart2(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();const sd=nearS(k),mid=(k.x+v.x)/2,I=restInfo(v),U=v.rig.m.userData.u,Hm=PROPS.heart,Cw=()=>I?restW(v,'chest',0,0,0):chestW3(v,k),C=Cw(),
+function fHeart2(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3Step();const sd=nearS(k),mid=(k.x+v.x)/2,I=restInfo(v),U=v.rig.m.userData.u,Hm=PROPS.heart,Cw=()=>I?restW(v,'chest',0,0,0):chestW3(v,k),C=Cw(),
   hole=o=>{if(I&&U.uHole){U.uHole.value.set(I.chest.x,I.chest.y,I.chest.s,o);U.uSmT.value=PROPS.smT||0}};
  if(T===1){PROPS.smT=0;hole(0);PROPS.hOn=0;v.fpose=DAZE();v.fk=.2;k.fpose=P({h:545,t:4,hd:12,tw:-70,x:-20,n:[40,-40],f:[250,-120],nl:[-380,0,0],fl:[290,0,0]});k.fk=.16;CUT(mid,360,1.15,{yaw:-f*.14,dol:.0014})}
  if(T<=24)k.x+=(v.x-f*262-k.x)*.2;
@@ -244,10 +244,12 @@ function fHeart2(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();const sd=n
  // lo strappo: i vasi si tendono, poi cedono
  if(T===70){slowN=2;sfx('rip');stop=6;shake=26;gush(G2v(C),50,14,-f);Hm.scale.setScalar(14);PROPS.hh=hold(Hm,k,sd,{dir:new THREE.Vector3(-f*.12,1,.1),rh:8,gy:-12,len:0,bend:1.3,col:0x8e1420});
   k.fpose=P({h:565,t:4,hd:8,tw:50,x:-14,n:[230,-60],f:[150,-20],nl:[-360,0,0],fl:[280,0,0]});k.fk=.1;
-  for(let i=0;i<3;i++){const o=i;ropes.push({a:()=>{const p=Hm.position;return[p.x-f*6,GROUND-p.y-10+o*5,p.z+o*3-3]},b:()=>{const q=Cw();return[q.x,GROUND-q.y+o*5-5,q.z]},l:999})}}
- if(T>70&&T<221&&PROPS.hh){const h=headW(k);aimHand(k,sd,h.add(new THREE.Vector3(f*(T<96?60:84),T<96?-34:-22,12)),T<80?.5:.8)}
- if(T>70&&T<96){k.x-=f*.9;if(T%4===0)gush(G2v(Cw()),4,4,-f)}
- if(T===96){ropes=[];slowN=1;stop=5;shake=18;sfx('squish');sfx('taglio');gush(G2v(Cw()),40,13,-f);jet({src:()=>G2v(Cw()),ang:Math.atan2(-.4,-f),life:120,rate:9,sp:11,r:1.9,spread:.12});pool(v.x-f*40,100);
+  gush(G2v(C),90,18,-f);for(let i=0;i<70;i++)drops3('b',C.clone().add(new THREE.Vector3((Math.random()-.5)*20,(Math.random()-.5)*30,(Math.random()-.5)*20)),new THREE.Vector3(-f*(2+Math.random()*7),1+Math.random()*6,(Math.random()-.5)*7),{r:1.2+Math.random()*2.6})}
+ if(T>70&&T<221&&PROPS.hh){const h=headW(k);aimHand(k,sd,h.add(new THREE.Vector3(f*(T<96?40:46),T<96?-34:-22,12)),T<80?.5:.8)}
+ // resta davanti all'avversario: non lo supera mai
+ {const dmin=T<96?110:170;if(T>24&&f*(v.x-k.x)<dmin)k.x+=(v.x-f*dmin-k.x)*(T<96?1:.2)}
+ if(T>70&&T<96){k.x-=f*.9;if(T%2===0){gush(G2v(Cw()),8,7,-f);drops3('b',Cw(),new THREE.Vector3(-f*(1+Math.random()*4),Math.random()*3,(Math.random()-.5)*4),{r:1.2+Math.random()*2})}}
+ if(T===96){slowN=1;stop=5;shake=18;sfx('squish');sfx('taglio');gush(G2v(Cw()),40,13,-f);jet({src:()=>G2v(Cw()),ang:Math.atan2(-.4,-f),life:120,rate:9,sp:11,r:1.9,spread:.12});pool(v.x-f*40,100);
   v.fpose=P({h:630,t:6,hd:14,tw:0,n:[120,120],f:[80,140],nl:[-150,0,0],fl:[120,0,0]});v.fk=.1;k.fpose=P({h:590,t:-6,hd:-8,tw:30,n:[250,-250],f:[140,30],nl:[-320,0,0],fl:[250,0,0]});k.fk=.1}
  if(T>=96)PROPS.smT=Math.min(2.2,(PROPS.smT||0)+.012);
  if(T===106){const p=Hm.position;CUT(p.x+f*8,p.y+8,3.1,{yaw:f*.4,pitch:-.03,fov:26,dol:.001,rise:.5})}
