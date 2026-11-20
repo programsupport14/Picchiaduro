@@ -77,8 +77,9 @@ function smoothNormals(g){const P=g.attributes.position,n=P.count,ix=g.index,T=i
 // Telefoni (soprattutto iPhone, dove Safari ha pochissima memoria per la grafica): le texture dei lottatori (2048) scendono a 1024,
 // un quarto della memoria, prima di andare alla scheda video. Sul computer restano piene.
 const LOWMEM=window.__lowmem!=null?!!window.__lowmem:(typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches)||/iPhone|iPad|iPod/.test(navigator.userAgent);
-function shrinkTex(root,max){const done=new Set();root.traverse(o=>{for(const m of[].concat(o.material||[]))for(const k in m){const t=m[k];if(!t||!t.isTexture||done.has(t))continue;done.add(t);const im=t.image,w=im&&(im.width||im.videoWidth),h=im&&im.height;if(!w||!h||Math.max(w,h)<=max)continue;
- const r=max/Math.max(w,h),c=document.createElement('canvas');c.width=Math.round(w*r);c.height=Math.round(h*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);if(im.close)try{im.close()}catch(e){}t.image=c;t.needsUpdate=true}})}
+function shrinkTex(root,max){const done=new Set(),small=new Map();root.traverse(o=>{for(const m of[].concat(o.material||[]))for(const k in m){const t=m[k];if(!t||!t.isTexture||done.has(t))continue;done.add(t);
+ try{const im=t.image,w=im&&(im.width||im.videoWidth),h=im&&im.height;if(!w||!h||Math.max(w,h)<=max)continue;let c=small.get(im);// la stessa immagine può servire a più texture: si rimpicciolisce una volta sola
+  if(!c){const r=max/Math.max(w,h);c=document.createElement('canvas');c.width=Math.round(w*r);c.height=Math.round(h*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);small.set(im,c)}t.image=c;t.needsUpdate=true}catch(e){console.warn('texture lasciata intera',e)}}})}
 async function loadGLB(e,dir,prog){const gl=e.js?await glbFromJs(e,dir,prog):await new Promise((ok,ko)=>gltfLoader().load(dir+(e.file||'modello.glb'),ok,x=>{if(prog&&x.total)prog(x.loaded/x.total)},ko));
  const sc=gl.scene,C=new THREE.Group();C.add(sc);if(LOWMEM)shrinkTex(sc,1024);if(e.ruota)sc.rotation.y+=rad(e.ruota);
  const bones=[],meshes=[];sc.traverse(o=>{if(o.isBone)bones.push(o);if(o.isSkinnedMesh)meshes.push(o)});if(!meshes.length)throw new Error('Il GLB non contiene una mesh con rigging');
@@ -174,7 +175,9 @@ function parkRig(R){scene.remove(R.G);if(R.head)scene.remove(R.head);if(R._pool)
 // liberano geometrie e texture dalla GPU. Restano in memoria normale e three.js le ricarica da solo se tornano in campo.
 function rigObjs(R){return[R.G,R.head,...(R._pool||[]).map(q=>q.P)].filter(Boolean)}
 function rigRes(R,set){for(const o of rigObjs(R))o.traverse(m=>{if(m.geometry)set.add(m.geometry);for(const mt of[].concat(m.material||[])){set.add(mt);for(const k in mt){const v=mt[k];if(v&&v.isTexture)set.add(v)}}});return set}
-function freeRigs(keep){const used=new Set();for(const R of keep)rigRes(R,used);for(const k in RIGC){const R=RIGC[k];if(keep.includes(R)||R._free)continue;const mine=rigRes(R,new Set());for(const x of mine)if(!used.has(x)&&x.dispose){x.dispose();if(x.isTexture)x.__gpu=0}R._free=1}}
+function freeRigs(keep){const used=new Set();for(const R of keep)rigRes(R,used);for(const k in RIGC){const R=RIGC[k];if(keep.includes(R)||R._free)continue;const mine=rigRes(R,new Set());for(const x of mine)if(!used.has(x)&&x.dispose){x.dispose();if(x.isTexture)x.__gpu=0}R._free=1;
+ // telefono: si butta via anche la copia in memoria normale (iPhone chiude la pagina se ne usa troppa); se il lottatore torna si ricarica dalla cache
+ if(LOWMEM){delete RIGC[k];const id=k.split('#')[0];if(!Object.keys(RIGC).some(j=>j.split('#')[0]===id))delete MODELS[id]}}}
 function rigFor(M,id,alt){const k=id+(alt?'#2':'');let R=RIGC[k];if(R){if(R._free){R._free=0;NEEDWARM=1}scene.add(R.G);if(R.head)scene.add(R.head);if(R._pool)for(const q of R._pool)scene.add(q.P);return R}
  NEEDWARM=1;R=RIGC[k]=makeRig(M,alt?(M.kind==='glb'?0xb8c8ff:0x7fa2e6):0xffffff,alt?0xaec6ff:0xffffff);
  // le 6 copie per i pezzi tagliati negli Accoppalo: create una volta sola, la prima volta che servono

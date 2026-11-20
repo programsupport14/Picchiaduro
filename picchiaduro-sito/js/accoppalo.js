@@ -778,14 +778,14 @@ function buildVolante(){const G=new THREE.Group(),body=new THREE.Group();G.add(b
 function volanteReady(G){const U=G.userData;if(U.ok)return;U.ok=1;let h=330;if(VOL){const c=VOL.clone(true);U.body.add(c);h=VOL.userData.h}else{const m=mat(0x2a78c8,{roughness:.35,metalness:.3}),a=new THREE.Mesh(new THREE.BoxGeometry(1100,150,430),m),b=new THREE.Mesh(new THREE.BoxGeometry(560,130,400),mat(0x15171a,{roughness:.2}));a.position.y=130;b.position.y=270;U.body.add(a,b)}
  U.lamp[0].position.set(-10,h+6,-70);U.lamp[1].position.set(-10,h+6,70);U.L[0].position.set(0,h+90,-90);U.L[1].position.set(0,h+90,90);U.lamp[0].visible=U.lamp[1].visible=!VOL}
 function volanteFlash(G,T,on){const U=G.userData,a=on&&(T>>2)%4<2,b=on&&(T>>2)%4>=2;U.L[0].intensity=a?26:0;U.L[1].intensity=b?26:0;U.lamp[0].material.color.setHex(a?0x4a7cff:0x06103a);U.lamp[1].material.color.setHex(b?0x4a7cff:0x06103a)}
-function fPolice(T,k,v,f){propsInit();fire3Init();pose3D(k);pose3D(v);holdFrame();const mid=(k.x+v.x)/2,T0=132,C=PROPS.pc;
+function fPolice(T,k,v,f){propsInit();fire3Init();pose3D(k);pose3D(v);holdFrame();const mid=(k.x+v.x)/2,T0=236,C=PROPS.pc;// la telefonata dura di più (prima era troppo veloce per leggere)
  if(T===1){v.fpose=DAZE();v.fk=.2;k.fpose=P({h:580,t:2,hd:8,tw:30,n:[120,120],f:[180,40],nl:[-330,0,0],fl:[260,0,0]});k.fk=.2;CUT(mid,350,1.12,{yaw:-f*.12,dol:.0012});PROPS.ph=null;
   // dove si fermano: una dietro l'avversario, una di traverso sul fondo, una di sbieco dal lato di chi chiama
   PROPS.ps={sir:0,car:[{x1:v.x+f*640,z1:-150,x0:v.x+f*3300,z0:-260,ry:f>0?Math.PI-.5:.5,t0:T0+16},{x1:v.x-f*60,z1:-640,x0:v.x-f*3400,z0:-640,ry:f>0?.12:Math.PI-.12,t0:T0+34},{x1:v.x-f*700,z1:-380,x0:v.x-f*3300,z0:-900,ry:f>0?-.62:Math.PI+.62,t0:T0+52}]};
   for(const c of C){volanteReady(c);c.visible=false;volanteFlash(c,0,0)}}
  const S=PROPS.ps;
  if(T<=2)k.x=Math.max(110,Math.min(AW-110,v.x-f*600));
- phoneCall(T,k,f,T0,[[62,'«Pronto, Polizia? Mi stanno menando.»',58],[100,'«Sì, è ancora qui. Fate con comodo.»',30]]);
+ phoneCall(T,k,f,T0,[[62,'«Pronto, Polizia? Mi stanno menando.»',96],[166,'«Sì, è ancora qui. Fate con comodo.»',64]]);
  if(T===T0){k.fpose=P({h:575,t:-6,hd:2,tw:20,n:[170,60],f:[160,50],nl:[-330,0,0],fl:[260,0,0]});k.fk=.12;S.sir=1}
  if(S.sir&&(T-T0)%60===0)sirena(1);
  if(T===T0+8){CUT(v.x-f*60,300,.72,{yaw:-f*.1,pitch:.05,fov:34,dol:.0006});v.fpose=P({h:630,t:-6,hd:-10,tw:-40,n:[110,-100],f:[50,-90],nl:[-170,0,0],fl:[140,0,0]});v.fk=.2}

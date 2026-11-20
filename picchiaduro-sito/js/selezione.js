@@ -1,11 +1,11 @@
 // selezione.js: schermata di scelta da picchiaduro. Tre passi: il proprio lottatore, l'avversario (CPU o giocatore 2), l'arena; poi la schermata VS mentre si carica.
 // Ritratti in griglia con cornici, lottatore selezionato a figura intera ai lati col nome grande. Tastiera, tocco e controller PS4.
-const SEL={open:false,vs:false,cur:[0,0,0],pick:[null,null],step:0,pad:{},rep:{}},COLS=5;let ROWS=3;// le righe crescono coi lottatori
+const SEL={open:false,vs:false,cur:[0,0,0],pick:[null,null],step:0,pad:{},rep:{}},_C=0;let COLS=5,ROWS=3;// con tanti lottatori aumentano le colonne (al massimo 4 righe), così la griglia e i tasti Indietro/Avanti restano nello schermo
 const $=id=>document.getElementById(id);
 const fdir=e=>(window.__lottDir||'lottatori/')+e.cartella+'/';
 function buildSel(){$('selgo').onclick=()=>selConfirm();$('selback').onclick=()=>selBack()}
 function porImg(e,box){if(e.ritratto){const img=new Image();img.alt='';img.loading='lazy';img.src=fdir(e)+e.ritratto;const c=e.ritratto_centro,z=e.ritratto_zoom||1;if(c){img.style.objectPosition=c[0]+'% '+c[1]+'%';img.style.transformOrigin=c[0]+'% '+c[1]+'%'}img.style.transform='skewX(7deg) scale('+(1.18*z)+')';box.append(img)}else box.textContent=(e.nome||'?')[0]}
-function fillSel(){ROWS=Math.max(3,Math.ceil(ROSTER.length/COLS));const g=$('grid');g.textContent='';for(let i=0;i<COLS*ROWS;i++){const e=ROSTER[i],b=document.createElement('button'),ok=e&&e.id&&!e.bloccato;b.className='card'+(ok?'':' lock');b.dataset.i=i;
+function fillSel(){COLS=Math.max(5,Math.ceil(ROSTER.length/4));ROWS=Math.max(3,Math.ceil(ROSTER.length/COLS));const g=$('grid');g.style.gridTemplateColumns=`repeat(${COLS},1fr)`;g.textContent='';for(let i=0;i<COLS*ROWS;i++){const e=ROSTER[i],b=document.createElement('button'),ok=e&&e.id&&!e.bloccato;b.className='card'+(ok?'':' lock');b.dataset.i=i;
   const im=document.createElement('div');im.className='por';if(ok)porImg(e,im);else im.textContent='?';const nm=document.createElement('span');nm.className='nm';nm.textContent=ok?e.nome:'In arrivo';b.append(im,nm);
   const t1=document.createElement('i');t1.className='tag t1';t1.textContent='G1';const t2=document.createElement('i');t2.className='tag t2';t2.textContent='G2';b.append(t1,t2);
   b.onclick=()=>{if(SEL.step>1)return;SEL.cur[SEL.step]=i;selConfirm()};b.onmouseenter=()=>{if(SEL.step>1||SEL.cur[SEL.step]===i)return;SEL.cur[SEL.step]=i;drawSel()};g.append(b)}
