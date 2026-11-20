@@ -1,5 +1,5 @@
 {
- "nota": "Caselle della schermata di scelta. tipo: glb. Le caselle senza id sono 'In arrivo'. Campi facoltativi: altezza (1 = 1,80 m), ruota (gradi), ossa (nomi delle ossa se non riconosciute), accoppalo (lightning, belly, syringe, fire, camper, gun, alpen, acid, police, disco, half, head, film, bottle, burp, scream, pray, magic: uno solo per lottatore), spalle (1 = normale: quanto alzare le clavicole), presa {phi, rot, off:[avanti, pollice, dorso]} per correggere come impugna gli oggetti, ritratto_centro [x,y] e ritratto_zoom per il ritratto, viso {occhi, bocca, distanza}. normali:false = niente normal map sul viso (se disegna righe), 'no' = da nessuna parte. pelle e guanti: colori per la mano rifatta della pistola (es. '#c99d80'), liscia:true/false = ricalcolare le normali.",
+ "nota": "Caselle della schermata di scelta. tipo: glb. Le caselle senza id sono 'In arrivo'. Campi facoltativi: altezza (1 = 1,80 m), ruota (gradi), ossa (nomi delle ossa se non riconosciute), accoppalo (lightning, belly, syringe, fire, camper, gun, alpen, acid, police, disco, half, head, film, bottle, burp, scream, pray, magic, mine: uno solo per lottatore), spalle (1 = normale: quanto alzare le clavicole), presa {phi, rot, off:[avanti, pollice, dorso]} per correggere come impugna gli oggetti, ritratto_centro [x,y] e ritratto_zoom per il ritratto, viso {occhi, bocca, distanza}. normali:false = niente normal map sul viso (se disegna righe), 'no' = da nessuna parte. pelle e guanti: colori per la mano rifatta della pistola (es. '#c99d80'), liscia:true/false = ricalcolare le normali.",
  "lottatori": [
   {
    "id": "giacca",
@@ -295,6 +295,7 @@
    "normali": false,
    "ritratto": "ritratto.jpg",
    "figura": "figura.webp",
+   "accoppalo": "mine",
    "ritratto_centro": [
     44.7,
     54.7
