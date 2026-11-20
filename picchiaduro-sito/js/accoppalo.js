@@ -259,8 +259,7 @@ function fHeart2(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3Step
   if(T%per===0&&amp>.08){sfx('battito');const ao=()=>{const q=Hm.localToWorld(Hm.userData.ao.clone());return[q.x,GROUND-q.y,q.z]};jet({src:ao,ang:-Math.PI/2-f*.5,life:5,rate:6*amp,sp:9*amp+2,r:1.6,spread:.25})}
   if(T%5===0&&T<212){const p=Hm.position;fx.push({x:p.x+(Math.random()-.5)*14,y:GROUND-p.y+16,z:p.z,vz:0,vx:0,vy:.6,l:70,c:'#a00c18',r:1.3+Math.random()*1.4,g:.3,blood:1,stain:1})}}
  if(T===160){CUT(v.x,330,1.5,{yaw:-f*.3,pitch:.02,fov:32,dol:.0012});v.fpose=P({h:626,t:14,hd:46,tw:0,n:[150,-40],f:[110,60],nl:[-160,0,0],fl:[130,0,0]});v.fk=.08}
- if(T===178){v.fpose=KNEEL();v.fk=.08;sfx('thud')}
- if(T===200){v.fpose=null;start(v,'ko');sfx('thud');pool(v.x,140)}
+ if(T>=166){v.fpose=null;v.fclip={c:'morto',f:Math.min(71,(T-166)*.42),b:T<168?14:6};if(T===248||T===284)sfx('thud');if(T===284)pool(v.x,140)}
  if(T===206){const p=Hm.position;CUT(p.x+f*4,p.y+4,3,{yaw:f*.38,pitch:-.02,fov:26})}
  if(T===221){const p=Hm.position,q=[p.x,GROUND-p.y];unhold(Hm);gush(q,110,22,0);bones(q,12);spark(q[0],q[1],0,true);shake=26;stop=8;flash=Math.max(flash,.15);sfx('squish');sfx('ossa');sfx('hitH');k.fpose=P({h:590,t:-4,hd:-6,tw:30,n:[240,-230],f:[140,30],nl:[-320,0,0],fl:[250,0,0]});k.fk=.2}
  if(T===250){CUT(v.x,190,1.45,{yaw:-f*.22,pitch:.28,orb:f*.002})}
@@ -304,7 +303,7 @@ function fGun(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();const Gp=PROP
   jet({src:()=>q,ang:Math.atan2(-.15,f),life:14,rate:16,sp:16,r:2.2,spread:.4});v.fpose=P({h:640,t:-16,hd:-30,tw:0,x:-10,n:[110,250],f:[40,300],nl:[-150,0,0],fl:[120,0,0]});v.fk=.5;pool(v.x+f*60,90)}
  if(T===76){slowN=1;CUT(v.x,340,1.6,{yaw:f*.3,pitch:-.01,orb:-f*.004,fov:32})}
  if(T>64&&T<118){v.fpose.n=[100+Math.sin(T*.9)*40,240+Math.cos(T*1.1)*50];v.fpose.f=[30+Math.cos(T*.8)*40,290];v.x+=f*.3}
- if(T===118){v.fpose=null;start(v,'ko');sfx('thud');CUT(v.x,200,1.4,{yaw:f*.2,pitch:.28})}
+ if(T>=118){v.fpose=null;v.fclip={c:'morto',f:Math.min(71,24+(T-118)*.42),b:T<120?14:6};if(T===118)CUT(v.x,240,1.3,{yaw:f*.2,pitch:.2});if(T===140||T===176)sfx('thud')}
  if(T===140){k.fpose=P({h:575,t:-2,hd:-4,tw:60,n:[60,-330],f:[180,20]});k.fk=.18}
  if(H&&T>=150&&T<205){H.dir=new THREE.Vector3(0,1,.15);const Kh=headW(k).add(new THREE.Vector3(k.f*26,-32,14));aimHold(k,H,Kh,.7);if(T>165&&T%3===0)smoke3(H.tip.x,H.tip.y,H.tip.z,6,40,70);if(T===176)sfx('swing')}
  if(T===156){const h=headW(k);CUT(h.x+f*16,h.y-22,2.9,{yaw:f*.4,fov:26,dol:.001})}
@@ -523,7 +522,7 @@ function fBurp(T,k,v,f){propsInit();fire3Init();muscLoad();pose3D(k);pose3D(v);h
   if(a===20){sfx('squish');sfx('urlolungo')}}
  if(T===B0+44){if(flay(v)){v.fpose=null;v.flash=8;stop=5;shake=26;sfx('sangue');const c=chestW3(v,k);for(let i=0;i<60;i++)drops3('f',c.clone().add(new THREE.Vector3(J()*60,J()*220,J()*50)),new THREE.Vector3(f*(5+Math.random()*12),2+Math.random()*7,J()*9),{r:2.5+Math.random()*5,w:(Math.random()-.5)*.9});for(let i=0;i<90;i++)drops3('b',c.clone().add(new THREE.Vector3(J()*50,J()*200,J()*40)),new THREE.Vector3(f*(3+Math.random()*9)+J()*4,1+Math.random()*7,J()*8),{r:1+Math.random()*2.4});CUT(v.x,330,1.7,{yaw:f*.4,pitch:.03,fov:30,dol:.0008})}}
  // 4) il corpo di soli muscoli trema e crolla (stessa caduta del fulmine)
- if(v.rig0){const a=T-(B0+44);if(a<34){v.fclip=null;v.fpose=P({h:612-a*.6,t:-22-Math.sin(T*.9)*4,hd:-30+Math.sin(T*1.3)*8,tw:Math.sin(T*.7)*14,x:-24,n:[200+Math.sin(T*1.1)*30,130],f:[190+Math.cos(T*1.2)*30,120],nl:[-200,0,0],fl:[170,0,0]});v.fk=.5}else{v.fpose=null;v.fclip={c:'scossa',f:Math.min(152,62+(a-34)*.55),b:a<36?14:6}}if(a%3===0&&a<200){const p=V3(bonePos(v,a%2?'spine':'neck')).add(new THREE.Vector3(J()*20,J()*20,J()*14));drops3('b',p,new THREE.Vector3(J()*1.2,-.5-Math.random()*1.5,J()*1.2),{r:.9+Math.random()*1.5})}if(a===80||a===122)sfx('thud')}
+ if(v.rig0){const a=T-(B0+44);if(a<34){v.fclip=null;v.fpose=P({h:612-a*.6,t:-22-Math.sin(T*.9)*4,hd:-30+Math.sin(T*1.3)*8,tw:Math.sin(T*.7)*14,x:-24,n:[200+Math.sin(T*1.1)*30,130],f:[190+Math.cos(T*1.2)*30,120],nl:[-200,0,0],fl:[170,0,0]});v.fk=.5}else{v.fpose=null;v.fclip={c:'morto',f:Math.min(71,(a-34)*.42),b:a<36?14:6}}if(a%3===0&&a<200){const p=V3(bonePos(v,a%2?'spine':'neck')).add(new THREE.Vector3(J()*20,J()*20,J()*14));drops3('b',p,new THREE.Vector3(J()*1.2,-.5-Math.random()*1.5,J()*1.2),{r:.9+Math.random()*1.5})}if(a===115||a===151)sfx('thud')}
  if(T===B1+16){k.swell=0;k.fpose=P({h:580,t:-6,hd:-10,tw:30,n:[45,235],f:[35,245],nl:[-330,0,0],fl:[260,0,0]});k.fk=.12;const h=headW(k);CUT(h.x+f*20,h.y-50,2.2,{yaw:f*.45,fov:28,dol:.001})}
  if(T===B1+40){sfx('risata');k.fpose=REL;k.fk=.1}
  if(T===B1+80){CUT(v.x,200,1.3,{yaw:f*.22,pitch:.26,orb:-f*.002});pool(v.x,80)}
@@ -556,7 +555,7 @@ function fScream(T,k,v,f){propsInit();fire3Init();muscLoad();pose3D(k);pose3D(v)
   const c=chestW3(v,k),hh=headW(v),n=a<16?2:5;for(let i=0;i<n;i++){const y=Math.random(),p=new THREE.Vector3(c.x+J()*40,40+y*(hh.y-20),c.z+J()*40);drops3('f',p,new THREE.Vector3(f*(4+Math.random()*9),1+Math.random()*4,J()*6),{r:2+Math.random()*4,w:(Math.random()-.5)*.8});if(i%2)drops3('b',p,new THREE.Vector3(f*(2+Math.random()*6),Math.random()*4,J()*5),{r:1+Math.random()*1.8})}
   if(a===16){sfx('squish');sfx('urlolungo')}}
  if(T===B0+44){if(flay(v)){v.fpose=null;v.flash=8;stop=5;shake=26;sfx('sangue');const c=chestW3(v,k);for(let i=0;i<60;i++)drops3('f',c.clone().add(new THREE.Vector3(J()*60,J()*220,J()*50)),new THREE.Vector3(f*(5+Math.random()*12),2+Math.random()*7,J()*9),{r:2.5+Math.random()*5,w:(Math.random()-.5)*.9});for(let i=0;i<90;i++)drops3('b',c.clone().add(new THREE.Vector3(J()*50,J()*200,J()*40)),new THREE.Vector3(f*(3+Math.random()*9)+J()*4,1+Math.random()*7,J()*8),{r:1+Math.random()*2.4});CUT(v.x,330,1.7,{yaw:f*.4,pitch:.03,fov:30,dol:.0008})}}
- if(v.rig0){const a=T-(B0+44);if(a<34){v.fclip=null;v.fpose=P({h:612-a*.6,t:-22-Math.sin(T*.9)*4,hd:-30+Math.sin(T*1.3)*8,tw:Math.sin(T*.7)*14,x:-24,n:[200+Math.sin(T*1.1)*30,130],f:[190+Math.cos(T*1.2)*30,120],nl:[-200,0,0],fl:[170,0,0]});v.fk=.5}else{v.fpose=null;v.fclip={c:'scossa',f:Math.min(152,62+(a-34)*.55),b:a<36?14:6}}if(a%3===0&&a<200){const p=V3(bonePos(v,a%2?'spine':'neck')).add(new THREE.Vector3(J()*20,J()*20,J()*14));drops3('b',p,new THREE.Vector3(J()*1.2,-.5-Math.random()*1.5,J()*1.2),{r:.9+Math.random()*1.5})}if(a===80||a===122)sfx('thud')}
+ if(v.rig0){const a=T-(B0+44);if(a<34){v.fclip=null;v.fpose=P({h:612-a*.6,t:-22-Math.sin(T*.9)*4,hd:-30+Math.sin(T*1.3)*8,tw:Math.sin(T*.7)*14,x:-24,n:[200+Math.sin(T*1.1)*30,130],f:[190+Math.cos(T*1.2)*30,120],nl:[-200,0,0],fl:[170,0,0]});v.fk=.5}else{v.fpose=null;v.fclip={c:'morto',f:Math.min(71,(a-34)*.42),b:a<36?14:6}}if(a%3===0&&a<200){const p=V3(bonePos(v,a%2?'spine':'neck')).add(new THREE.Vector3(J()*20,J()*20,J()*14));drops3('b',p,new THREE.Vector3(J()*1.2,-.5-Math.random()*1.5,J()*1.2),{r:.9+Math.random()*1.5})}if(a===115||a===151)sfx('thud')}
  // 3) "mic drop": lo lascia cadere
  if(T===B1+24){k.fpose=REL;k.fk=.15;PROPS.mu=0;ARMIK.length=0;const h=headW(k);CUT(h.x+f*20,h.y-60,2,{yaw:f*.45,fov:28,dol:.001})}
  if(T===B1+40){k.fpose=arm(REL,[200,60]);k.fk=.3}

@@ -1,5 +1,5 @@
 // gioco.js: logica del combattimento, fatality, disegno, controlli e online. I lottatori sono in lottatori.js.
-const W=1280,H=720,AW=1800,BITS={left:1,right:2,up:4,down:8,block:16,jab:32,cross:64,kick:128,special:256,reset:512,flickL:1024,flickR:2048,fat:4096},GROUND=650,S=.29,cv=document.getElementById('c'),g=document.getElementById('o').getContext('2d'),gh=document.getElementById('h').getContext('2d');let SC=1.5,HUDSIG='',FXD=1;
+const W=1280,H=720,AW=1800,BITS={left:1,right:2,up:4,down:8,block:16,jab:32,cross:64,kick:128,special:256,reset:512,flickL:1024,flickR:2048,fat:4096,spartan:8192},GROUND=650,S=.29,cv=document.getElementById('c'),g=document.getElementById('o').getContext('2d'),gh=document.getElementById('h').getContext('2d');let SC=1.5,HUDSIG='',FXD=1;
 const J={root:[338,880],head:[330,262],nS:[135,368],nE:[105,592],nW:[112,812],fS:[462,368],nH:[262,880],nK:[185,1230],nA:[135,1560],fH:[415,880],fK:[420,1220],fA:[440,1548]};
 const d2=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]),ang=(a,b)=>Math.atan2(b[1]-a[1],b[0]-a[0]),rad=x=>x*Math.PI/180;
 const LEN={ua:d2(J.nS,J.nE),la:d2(J.nE,J.nW),nt:d2(J.nH,J.nK),ns:d2(J.nK,J.nA),ft:d2(J.fH,J.fK),fs:d2(J.fK,J.fA)};
@@ -33,6 +33,9 @@ const MOVES={
  win:{name:'Vittoria',keys:[[70,POSE.win,.14]],loop:1},
  dizzy:{keys:[[34,P({h:600,t:-10,hd:-14,x:-20,tw:0,n:[60,330],f:[-20,340],nl:[-170,0,0],fl:[130,0,0]}),.08],[34,P({h:585,t:9,hd:12,x:24,tw:0,n:[110,320],f:[30,350],nl:[-170,0,0],fl:[130,0,0]}),.08]],loop:1,stun:1},
  hurt:{keys:[[13,POSE.hit,.6]],stun:1},
+ // calcio spartano (R2 + Cerchio): lento, rompe la parata (unblock) e manda l'avversario all'indietro barcollando (stagger)
+ spartan:{name:'Calcio spartano',keys:[[10,P({h:640,t:-8,x:12,nl:[100,310,-22],fl:[130,0,0],n:[240,-40],f:[140,-50]}),.5],[8,P({h:640,t:-20,x:-10,hd:10,nl:[560,330,-40],fl:[105,0,0],n:[170,20],f:[240,-90]}),.72],[6,P({h:640,t:-20,x:-10,hd:10,nl:[560,330,-40],fl:[105,0,0],n:[170,20],f:[240,-90]}),.72],[24,POSE.guard,.27]],hit:{from:18,to:23,pt:'nA',dmg:12,kb:6,hs:20,bs:6,unblock:1,gb:1,box:[40,235,170,380]},lunge:[6,18,4.2]},
+ stagger:{keys:[[46,POSE.hit,.3]],stun:1,adv:[0,-1,-2,-3,-4,-5,-6,-6.5,-7,-7,-7,-6.8,-6.5,-6.2,-5.8,-5.4,-5,-4.6,-4.2,-3.8,-3.4,-3,-2.6,-2.2,-1.9,-1.6,-1.3,-1,-.8,-.6,-.4,-.3,-.2,-.1]},
  ko:{keys:[[16,POSE.ko1,.22],[999,POSE.ko2,.13]],stun:1,ko:1}
 };
 // lo spostamento in avanti di ruota e raffica, ricampionato sulla nuova durata (stessa distanza totale)
@@ -118,7 +121,7 @@ function impactPoint(a,t,h,at){try{const side=(h.pt||'nW')[0]==='n'?(a.f>0?'R':'
  const p=best.lerp(s3,.35);return{at:[p.x,GROUND-p.y],hi,zone}}catch(e){return null}}
 function damage(t,a,h,at,zn){if(t.ko||t.gone)return;const ip=impactPoint(a,t,h,at);if(ip){at=ip.at;if(zn!=null){ip.zone=zn;ip.hi=zn===0}}const blocked=t.block&&!h.unblock;const low=h.low&&t.block&&!t.crouch;const real=blocked&&!low;const dmg=real?0:h.dmg;t.hp=Math.max(0,t.hp-dmg);t.vx=a.f*(real?h.kb*.65:h.kb);if(real)a.vx=-a.f*2.4;t.flash=7;t.rx={tick,hi:ip?ip.hi:at[1]<GROUND+t.y-330,zone:ip?ip.zone:(at[1]<GROUND+t.y-330?0:at[1]<GROUND+t.y-190?1:2),hv:!real&&(h.dmg>=10||!!h.heavy),mag:Math.max(.55,Math.min(1.35,h.dmg/11)),side:h.pt==='nW'?-1:1,blk:real};const hv=!real&&(h.dmg>=10||h.heavy),head=ip?ip.hi:at[1]<GROUND+t.y-330;{const as=real?3:Math.round(2+h.dmg*.35);if(!h.proj){a.hstop=as;a.conn=a.mseq}t.hstop=as+(real?2:3);if(real)t.bstun=h.bs||10}{const kk=h.pt&&h.pt[1]==='A';sfx(real?'block':kk?(hv?'kickH':'kick'):hv?'hitH':'hit')}shake=real?2:h.dmg*.9;spark(at[0],at[1],a.f,!real);if(real)for(let i=0;i<10;i++){const an=Math.random()*6.28,v=3+Math.random()*6;fx.push({x:at[0],y:at[1],z:30,vx:Math.cos(an)*v-a.f*3,vy:Math.sin(an)*v,l:9+Math.random()*6,c:'#e8f4ff',r:1.5+Math.random()*2,g:0,glow:1})}if(!real){sweat(at[0],at[1],a.f,head?16+h.dmg:6);gush([at[0],at[1]],hv?16:6,hv?7:4,a.f*3);if(hv&&head)jet({src:()=>[at[0],at[1]],ang:Math.atan2(-.35,a.f),life:12,rate:4,sp:9,r:1.8,spread:.3});camKick={t:14,x:at[0],a:Math.min(.11,h.dmg*.0075)};if(head&&t.hp<40)t.rocked=tick;if(head&&t.hp<75)t.bleed=Math.max(t.bleed||0,140+(75-t.hp)*4);if(hv)flash=Math.max(flash,.18)}if(!real&&t.hp<=0&&!net)slowmo=70;
  if(a.pad!=null){const q=pads().find(x=>x.index===a.pad);if(q&&q.vibrationActuator)try{q.vibrationActuator.playEffect('dual-rumble',{duration:110,strongMagnitude:.7,weakMagnitude:.5}).catch(()=>{})}catch(e){}}
- if(t.hp<=0)endRound(a,t);else if(!real){start(t,'hurt');t.hsT=h.hs||13}}
+ if(t.hp<=0)endRound(a,t);else if(!real){if(h.gb){t.vx=0;t.block=false;t.bstun=0;start(t,'stagger');sfx('kickH');shake=Math.max(shake,14);if(blocked){flash=Math.max(flash,.12);sfx('vetro')}}else{start(t,'hurt');t.hsT=h.hs||13}}}
 function endRound(w,l){l.ko=true;w.w++;winnerC=w;loserC=l;sfx('ko');if(w.w>=3){state='finish';finishT=300;l.vx=0;start(l,'dizzy');say('FINISCILO!',300);if(typeof fatPrep==='function')fatPrep(w,l)}else{state='roundEnd';roundT=175;l.vx=w.f*5;l.kc=tick;start(l,'ko');say('K.O.',100)}}
 function update(c,o){const i=c.inp,BS=c.bstun>0;c.flash=Math.max(0,c.flash-1);if(c.buf){if(tick-c.buf.t>8||state!=='fight'||c.ko)c.buf=null;else if(!BS&&act(c,c.buf.id))c.buf=null}if(BS)c.bstun--;
  {const fw=!!(c.f>0?i.right:i.left),bk=!!(c.f>0?i.left:i.right);if(fw&&!c.pfw){c.run=tick-(c.tfw==null?-99:c.tfw)<=13?1:0;c.tfw=tick}if(!fw)c.run=0;c.dreq=0;if(bk&&!c.pbk){if(tick-(c.tbk==null?-99:c.tbk)<=13)c.dreq=1;c.tbk=tick}if(c.fbk){c.dreq=1;c.fbk=0}c.pfw=fw;c.pbk=bk;if(state!=='fight'||c.ko||busy(c)||BS||c.y<0){c.dash=0;c.fdash=0;c.ffw=0}}
@@ -295,7 +298,7 @@ function fFire(T,k,v,f){fire3Init();if(!fireL){fireL=new LProxy(0xff7a26,0,1500,
  if(T===250)say('ACCOPPALO',420);
  if(T===335)endWin(k)}
 
-function applyBits(B){if((B[0]|B[1])&BITS.reset&&!((prevB[0]|prevB[1])&BITS.reset)){prevB=B.slice();reset();return}[p1,p2].forEach((c,i)=>{const b=B[i],p=prevB[i];c.inp={left:b&1,right:b&2,up:b&4,down:b&8,block:b&16};if(b&3072){const tw=(b&2048?1:-1)*c.f;if(tw<0)c.fbk=1;else c.ffw=1}{const fw=!!(c.f>0?c.inp.right:c.inp.left);if(c.inp.down){if(!c.dnH)c.dnS=tick;c.dnL=tick}c.dnH=!!c.inp.down;if(fw&&!c.fwH)c.fwS=tick;c.fwH=fw}for(const id of['jab','cross','kick','special','fat'])if(b&BITS[id]&&!(p&BITS[id]))press(c,id);if(c.danceId&&c.inp.down&&!(p&8)&&!c.dance)c.dance={c:c.danceId,t0:tick}});prevB=B.slice()}
+function applyBits(B){if((B[0]|B[1])&BITS.reset&&!((prevB[0]|prevB[1])&BITS.reset)){prevB=B.slice();reset();return}[p1,p2].forEach((c,i)=>{const b=B[i],p=prevB[i];c.inp={left:b&1,right:b&2,up:b&4,down:b&8,block:b&16};if(b&3072){const tw=(b&2048?1:-1)*c.f;if(tw<0)c.fbk=1;else c.ffw=1}{const fw=!!(c.f>0?c.inp.right:c.inp.left);if(c.inp.down){if(!c.dnH)c.dnS=tick;c.dnL=tick}c.dnH=!!c.inp.down;if(fw&&!c.fwH)c.fwS=tick;c.fwH=fw}for(const id of['jab','cross','kick','special','fat','spartan'])if(b&BITS[id]&&!(p&BITS[id]))press(c,id);if(c.danceId&&c.inp.down&&!(p&8)&&!c.dance)c.dance={c:c.danceId,t0:tick}});prevB=B.slice()}
 function step(B){tick++;flash*=.86;if(slash&&--slash.l<=0)slash=null;if(state==='fatality'&&slowN>1&&tick%slowN&&!(B&&(B[0]|B[1])&BITS.reset))return;if(demo)demoStep();else applyBits(B||[0,0]);if(state==='intro'){if(--introT===34)say('COMBATTI',96);if(introT<=0)state='fight'}if(state==='fight'&&mode!=='train'&&--clock<=0){const l=p1.hp<p2.hp?p1:p2;endRound(l===p1?p2:p1,l)}if(state==='roundEnd'){if(--roundT===75&&!winnerC.ko){start(winnerC,'win')}if(roundT<=0){reset(true);return}}if(state==='finish'&&--finishT<=0){state='over';loserC.kc=tick;start(loserC,'ko');winPose(winnerC,1);say('',0)}if(state==='fatality')fatalStep();if(stop>0){stop--;fx=fx.filter(f=>f.ring||f.l>0);return}
  // hitstop separato: chi colpisce e chi subisce restano fermi ognuno per i suoi fotogrammi
  for(const[c,o]of[[p1,p2],[p2,p1]]){if(c.hstop>0){c.hstop--;c.flash=Math.max(0,c.flash-1);c.show+=(c.hp-c.show)*.09;if(c.buf)c.buf.t++}else update(c,o)}pushApart();
@@ -423,7 +426,7 @@ function render(){camera();lightsSync();{const mx=p1&&p2?(p1.x+p2.x)/2:900,u=sun
  if(typeof fatDraw==='function')fatDraw(cine);if(DBG&&!cine&&p1)dbgDraw();g.setTransform(SC,0,0,SC,0,0);if(flash>.02){g.fillStyle=`rgba(255,244,214,${flash})`;g.fillRect(0,0,W,H)}}hud()}
 const keys={};let latch=0;
 // comandi: si possono cambiare dal menu "Comandi" (salvati nel browser). Due tasti per azione e un pulsante del controller.
-const KEYDEF={left:['KeyA','ArrowLeft'],right:['KeyD','ArrowRight'],up:['KeyW','ArrowUp'],down:['KeyS','ArrowDown'],block:['Space'],jab:['KeyJ'],cross:['KeyI'],kick:['KeyK'],special:['KeyL'],reset:['KeyR'],fat:['KeyF']},PADDEF={left:14,right:15,up:12,down:13,block:5,jab:2,cross:3,kick:0,special:1,reset:8,fat:7};
+const KEYDEF={left:['KeyA','ArrowLeft'],right:['KeyD','ArrowRight'],up:['KeyW','ArrowUp'],down:['KeyS','ArrowDown'],block:['Space'],jab:['KeyJ'],cross:['KeyI'],kick:['KeyK'],special:['KeyL'],reset:['KeyR'],fat:['KeyF'],spartan:['KeyO']},PADDEF={left:14,right:15,up:12,down:13,block:5,jab:2,cross:3,kick:0,special:1,reset:8,fat:7};
 const CFG={k:clone(KEYDEF),p:clone(PADDEF)};let map={};
 function buildMap(){map={};for(const a in CFG.k)for(const c of CFG.k[a])if(c)map[c]=a}
 function cfgLoad(){try{const s=JSON.parse(localStorage.getItem('comandi')||'null');if(s&&s.k&&s.p)for(const a in KEYDEF){if(Array.isArray(s.k[a]))CFG.k[a]=s.k[a].filter(x=>typeof x==='string').slice(0,2);if(Number.isInteger(s.p[a])&&s.p[a]>=0&&s.p[a]<32)CFG.p[a]=s.p[a]}}catch(e){}buildMap()}
@@ -439,7 +442,7 @@ let padBlocked=false;function pads(){try{return navigator.getGamepads?[...naviga
 const padName=document.getElementById('pad');let lastPadTxt='';
 // scatto: l'analogico portato di colpo dal centro al fondo (in 5 letture al massimo) produce un bit di scatto, mandato come gli altri tasti (anche online)
 const FLK={};function flick(q,ax){const s=FLK[q.index]||(FLK[q.index]={c:0,t:99,used:0});s.t++;if(Math.abs(ax)<.3){s.c=1;s.t=0;s.used=0;return 0}if(s.c&&!s.used&&s.t<=4&&Math.abs(ax)>.85){s.used=1;s.c=0;return ax<0?1024:2048}if(s.t>5)s.c=0;return 0}
-function padBits(q){if(!q)return 0;const b=n=>q.buttons[n]&&q.buttons[n].pressed,ax=q.axes[0]||0,ay=q.axes[1]||0,P=CFG.p;return flick(q,ax)|(b(P.left)||ax<-.4?1:0)|(b(P.right)||ax>.4?2:0)|(b(P.up)||ay<-.7?4:0)|(b(P.down)||ay>.6?8:0)|(b(P.block)?16:0)|(b(P.jab)?32:0)|(b(P.cross)?64:0)|(b(P.kick)?128:0)|(b(P.special)?256:0)|(b(P.reset)&&P.reset!==9?512:0)|(b(P.fat)&&b(P.jab)?4096:0)}
+function padBits(q){if(!q)return 0;const b=n=>q.buttons[n]&&q.buttons[n].pressed,ax=q.axes[0]||0,ay=q.axes[1]||0,P=CFG.p;return flick(q,ax)|(b(P.left)||ax<-.4?1:0)|(b(P.right)||ax>.4?2:0)|(b(P.up)||ay<-.7?4:0)|(b(P.down)||ay>.6?8:0)|(b(P.block)?16:0)|(b(P.jab)?32:0)|(b(P.cross)?64:0)|(b(P.kick)?128:0)|(b(P.special)&&!b(P.fat)?256:0)|(b(P.reset)&&P.reset!==9?512:0)|(b(P.fat)&&b(P.jab)?4096:0)|(b(P.fat)&&b(P.special)?8192:0)}
 function keyBits(){let v=latch;latch=0;for(const k in keys)if(keys[k])v|=BITS[k];return v}
 // CPU: produce gli stessi tasti di un giocatore, quindi buffer, cancel e frame data valgono anche per lei. Tre livelli (menu → Difficoltà).
 const CPUL=[{n:'Facile',blk:.15,low:.2,att:.035,chain:.15,pun:.1,sp:.08,rea:14},{n:'Normale',blk:.45,low:.55,att:.06,chain:.6,pun:.5,sp:.18,rea:8},{n:'Difficile',blk:.8,low:.9,att:.09,chain:.95,pun:.9,sp:.25,rea:3}];
@@ -453,6 +456,8 @@ function cpuBits(){const c=p2,o=p1,L=CPUL[CPULV],d=Math.abs(c.x-o.x),to=o.x>c.x?
  if(thr&&cpuS.seen!==o.mseq&&o.t>=Math.min(L.rea,OH[0].from-1)){cpuS.seen=o.mseq;if(R()<L.blk){cpuS.hold=Math.max(2,OH[OH.length-1].to-o.t+3);cpuS.low=o.m==='sweep'&&R()<L.low?8:0}}
  if(cpuS.hold>0){cpuS.hold--;if(!c.m)return 16|cpuS.low}
  if(c.bstun>0)return 16|cpuS.low;
+ // contro chi para spesso: calcio spartano
+ if(!c.m&&o.block&&d<270&&R()<.06)return 8192;
  // catena: se il colpo è entrato o è stato parato prosegue pugno rapido → pugno pesante → calcio. Il tasto finisce nel buffer e parte nella finestra di cancel
  if(c.m&&c.conn===c.mseq&&cpuS.ch!==c.mseq){cpuS.ch=c.mseq;const nx={jab:64,cross:128}[c.m];if(nx&&R()<L.chain)return nx}
  if(busy(c))return 0;

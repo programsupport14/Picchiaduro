@@ -11,7 +11,7 @@ function sampleClip(cl,f,out,root){const n=cl.n;let i0,i1;if(cl.loop){f=((f%n)+n
  for(const k of AK){anQ1.fromArray(cl.q[k],i0*4);anQ2.fromArray(cl.q[k],i1*4);out[k].copy(anQ1).slerp(anQ2,u)}
  const r=cl.root;root.set(r[i0*3]+(r[i1*3]-r[i0*3])*u,r[i0*3+1]+(r[i1*3+1]-r[i0*3+1])*u,r[i0*3+2]+(r[i1*3+2]-r[i0*3+2])*u)}
 // mosse col motion capture: il picco della clip cade nel fotogramma logico in cui il colpo va a segno
-const MOVECLIP={flykick:{c:'flykick',lin:1},combo:{c:'combo',lin:1},jab:{c:'jab',hit:5},cross:{c:'cross',hit:11},special:{c:'special',hit:13},kick:{c:'kick',hit:12}};
+const MOVECLIP={flykick:{c:'flykick',lin:1},combo:{c:'combo',lin:1},jab:{c:'jab',hit:5},cross:{c:'cross',hit:11},special:{c:'special',hit:13},kick:{c:'kick',hit:12},spartan:{c:'spartan',hit:20},stagger:{c:'colpito',lin:1}};
 const moveLen=id=>MOVES[id].keys.reduce((a,k)=>a+k[0],0);
 const herm=(p0,p1,m0,m1,L,x)=>{const u=x/L,u2=u*u,u3=u2*u;return(2*u3-3*u2+1)*p0+(u3-2*u2+u)*L*m0+(-2*u3+3*u2)*p1+(u3-u2)*L*m1};
 function warpT(t,T,hit,cl){const pk=cl.peak,e=cl.n-1,L2=Math.max(1,T-hit),s0=pk/hit,s2=(e-pk)/L2,dh=s0+s2>0?2*s0*s2/(s0+s2):0;if(t<=0)return 0;if(t<=hit)return herm(0,pk,s0*.4,dh,hit,t);if(t>=T)return e;return herm(pk,e,dh,s2*.5,L2,t-hit)}
@@ -101,8 +101,8 @@ function animLayer(c,R,M,PROC,px,py,pz){
  // ---------- strati sopra la clip (solo grafica): guardia da lottatore, meccanica del colpo, reazioni, salto, parata, spalle ----------
  for(const k of AK)FIN[k].copy(A.out[k]);fHip.copy(A.hip);
  const live=src!=='rag'&&src!=='proc',Tx=c.f*.57,Tz=.82,sm5=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*t*(t*(t*6-15)+10)};
- const isG=src==='guard'||src.startsWith('walk'),mv=live&&c.m&&MOVECLIP[c.m]?c.m:null,punch=mv&&mv!=='kick'&&mv!=='flykick';
- lerpA(A,'gw',live&&!mv&&src!=='block'&&src!=='kof'&&!c.fclip&&!c.dance?(c.m==='hurt'?.45:1):0,src==='block'?.5:.2,dt);lerpA(A,'sw',isG?1:src.startsWith('land')?.8:punch?.6:0,.18,dt);lerpA(A,'pw',punch?1:0,.3,dt);lerpA(A,'kw',mv==='kick'?1:0,.25,dt);
+ const isG=src==='guard'||src.startsWith('walk'),mv=live&&c.m&&MOVECLIP[c.m]?c.m:null,punch=mv&&mv!=='kick'&&mv!=='spartan'&&mv!=='stagger'&&mv!=='flykick';
+ lerpA(A,'gw',live&&!mv&&src!=='block'&&src!=='kof'&&!c.fclip&&!c.dance?(c.m==='hurt'?.45:1):0,src==='block'?.5:.2,dt);lerpA(A,'sw',isG?1:src.startsWith('land')?.8:punch?.6:0,.18,dt);lerpA(A,'pw',punch?1:0,.3,dt);lerpA(A,'kw',(mv==='kick'||mv==='spartan')?1:0,.25,dt);
  // estensione di braccia e gambe verso l'avversario, misurata sulla clip: guida la rotazione del tronco
  const ext=(a,b)=>{inV.copy(DIRS[a]).applyQuaternion(FIN[a]);inV2.copy(DIRS[b]).applyQuaternion(FIN[b]);return((inV.x+inV2.x)*Tx+(inV.z+inV2.z)*Tz)/2};
  const eR=sm5(.5,.9,ext('uR','lR')),eL=sm5(.5,.9,ext('uL','lL')),kR=sm5(.25,.7,ext('tR','sR')),kL=sm5(.25,.7,ext('tL','sL')),lead=c.f>0?'L':'R';
