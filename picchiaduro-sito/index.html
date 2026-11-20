@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#3a0a05"><link rel="apple-touch-icon" href="img/icona192.png"><meta name="apple-mobile-web-app-capable" content="yes">
 <title>Picchiaduro tra amici</title>
 <style>
 @font-face{font-family:'Metal Mania';src:url(font/metal-mania.woff2) format('woff2');font-display:swap}
@@ -80,6 +80,7 @@ details{margin-top:8px;color:var(--mut)}summary{cursor:pointer;min-height:32px}
 #home.g3 .hlogo .l1{visibility:hidden}
 .hlogo .l2{display:block;margin-top:1.1cqw;font:700 1.55cqw system-ui,sans-serif;letter-spacing:.62em;text-indent:.62em;text-transform:uppercase;color:#ffd9a0;text-shadow:0 0 1cqw rgba(255,90,20,.9),0 .15cqw 0 #000;animation:hl2 1.2s .5s both}
 @keyframes hl1{from{transform:scale(3);opacity:0}}@keyframes hl2{from{opacity:0;letter-spacing:1.6em}}
+#offl{position:absolute;left:0;right:0;bottom:1.2%;text-align:center;font:600 .95cqw system-ui,sans-serif;color:#c9a88a;opacity:.85;pointer-events:none}
 #hsub{position:absolute;top:46.5%;left:0;right:0;text-align:center;margin:0;font-size:2.3cqw;color:#ffd24c;text-transform:uppercase;letter-spacing:.12em;text-shadow:0 .2cqw 0 #5a0c06,0 0 1.2cqw rgba(255,90,20,.7)}
 #hmenu{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:.62cqw;width:38%;margin:0 auto 5.2%}
 #hmenu.two{display:grid;grid-template-columns:1fr 1fr;width:56%;gap:.6cqw 1cqw}#hmenu.two .back{grid-column:1/3;justify-self:center;width:50%}
@@ -161,4 +162,5 @@ table{border-collapse:collapse;width:100%;max-width:560px}td,th{padding:4px 12px
 <script defer src="js/mani.js"></script><script defer src="js/accoppalo.js"></script>
 <script defer src="js/audio.js"></script>
 <script defer src="js/tocco.js"></script>
+<script defer src="js/offline.js"></script>
 </body></html>

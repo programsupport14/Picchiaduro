@@ -524,7 +524,7 @@ function fBurp(T,k,v,f){propsInit();fire3Init();muscLoad();pose3D(k);pose3D(v);h
  // 4) il corpo di soli muscoli trema e crolla (stessa caduta del fulmine)
  if(v.rig0){const a=T-(B0+44);if(a<34){v.fclip=null;v.fpose=P({h:612-a*.6,t:-22-Math.sin(T*.9)*4,hd:-30+Math.sin(T*1.3)*8,tw:Math.sin(T*.7)*14,x:-24,n:[200+Math.sin(T*1.1)*30,130],f:[190+Math.cos(T*1.2)*30,120],nl:[-200,0,0],fl:[170,0,0]});v.fk=.5}else{v.fpose=null;v.fclip={c:'morto',f:Math.min(71,(a-34)*.42),b:a<36?14:6}}if(a%3===0&&a<200){const p=V3(bonePos(v,a%2?'spine':'neck')).add(new THREE.Vector3(J()*20,J()*20,J()*14));drops3('b',p,new THREE.Vector3(J()*1.2,-.5-Math.random()*1.5,J()*1.2),{r:.9+Math.random()*1.5})}if(a===115||a===151)sfx('thud')}
  if(T===B1+16){k.swell=0;k.fpose=P({h:580,t:-6,hd:-10,tw:30,n:[45,235],f:[35,245],nl:[-330,0,0],fl:[260,0,0]});k.fk=.12;const h=headW(k);CUT(h.x+f*20,h.y-50,2.2,{yaw:f*.45,fov:28,dol:.001})}
- if(T===B1+40){sfx('risata');k.fpose=REL;k.fk=.1}
+ if(T===B1+40){k.fpose=REL;k.fk=.1}
  if(T===B1+80){CUT(v.x,200,1.3,{yaw:f*.22,pitch:.26,orb:-f*.002});pool(v.x,80)}
  if(T===B1+150){CUT(mid,330,1.05,{yaw:-f*.1,orb:f*.0015});say('ACCOPPALO',420)}
  if(T===B1+230){airHide();endWin(k)}}
@@ -561,7 +561,7 @@ function fScream(T,k,v,f){propsInit();fire3Init();muscLoad();pose3D(k);pose3D(v)
  if(T===B1+40){k.fpose=arm(REL,[200,60]);k.fk=.3}
  if(T===B1+52&&PROPS.mh){const p=Mc.position.clone();unhold(Mc,1);PROPS.mh=null;PROPS.mf={p,v:new THREE.Vector3(0,0,0),r:0};Mc.visible=true;const h=handW(k);CUT(h.x,h.y-120,1.5,{yaw:f*.3,pitch:-.05,fov:30})}
  if(PROPS.mf){const c=PROPS.mf;c.p.add(c.v);c.v.y-=.6;c.r+=.12;if(c.p.y<5){c.p.y=5;if(Math.abs(c.v.y)>2){sfx('metallo');sfx('fischio')}c.v.y*=-.3;c.v.x*=.5}Mc.position.copy(c.p);Mc.rotation.set(0,0,Math.min(Math.PI/2,c.r)*f)}
- if(T===B1+70){k.fpose=REL;k.fk=.12;sfx('risata')}
+ if(T===B1+70){k.fpose=REL;k.fk=.12;0}
  if(T===B1+110){CUT(v.x,200,1.3,{yaw:f*.22,pitch:.26,orb:-f*.002});pool(v.x,80)}
  if(T===B1+170){CUT(mid,330,1.05,{yaw:-f*.1,orb:f*.0015});say('ACCOPPALO',420)}
  if(T===B1+250){airHide();endWin(k)}}
@@ -652,7 +652,7 @@ function fBottle(T,k,v,f){propsInit();fire3Init();bottleInit();pose3D(k);pose3D(
  if(v.burn>0&&T<340){v.burn=Math.min(1,v.burn+.012);const s1=Math.sin(T*.47),s2=Math.cos(T*.39),s3=Math.sin(T*.61);if(T>CG.hit+12){v.fpose=P({h:630-v.burn*40,t:-12+s3*10,hd:-22+s1*14,tw:s2*30,x:-8,n:[70+s1*110,280+s2*120],f:[-10+s2*100,300+s3*110],nl:[-130+s1*60,0,0],fl:[110-s1*60,0,0]});v.fk=.35;v.x=Math.max(120,Math.min(AW-120,v.x+f*.6*Math.sin(T*.05)))}}
  if(v.burn>0){burnU(v,v.burn,T<340?.75+.25*Math.sin(T*.7)*Math.sin(T*.23):Math.max(.12,1-(T-340)/110)*(.8+.2*Math.sin(T*.5)));bodyFire3(v,T<340?6:T<400?3:T<460?1:0,T<350?1.1:.65);if(T%7===0&&T<440)sfx('crepita');fireL.intensity=2.2*(.7+.3*Math.random())*Math.max(.2,1-(T-300)/260);const c=chestW3(v,k);fireL.position.set(c.x,c.y+40,150);
   if(T<460&&T%5===0)smoke3(c.x+J()*50,c.y+40,c.z,40,200,120+Math.random()*60)}
- if(T===300){const h=headW(k);CUT(h.x+f*16,h.y-40,2.2,{yaw:f*.45,fov:28,dol:.001});sfx('risata');k.fpose=P({h:580,t:-8,hd:-14,tw:30,n:[45,235],f:[35,245],nl:[-330,0,0],fl:[260,0,0]});k.fk=.15}
+ if(T===300){const h=headW(k);CUT(h.x+f*16,h.y-40,2.2,{yaw:f*.45,fov:28,dol:.001});k.fpose=P({h:580,t:-8,hd:-14,tw:30,n:[45,235],f:[35,245],nl:[-330,0,0],fl:[260,0,0]});k.fk=.15}
  if(T===340){v.fpose=null;v.vx=0;start(v,'ko');sfx('thud');CUT(v.x,200,1.4,{yaw:f*.22,pitch:.26,orb:-f*.002})}
  if(T===380){pool(v.x,70);decals.push({x:v.x,z:0,r:0,R:130,c:'#1a1210',slow:1});CUT(mid,330,1.05,{yaw:-f*.1,orb:f*.0015});say('ACCOPPALO',420)}
  // le mani libere hanno il palmo girato in fuori con queste pose: avambraccio ruotato di mezzo giro (al prossimo fotogramma, in holdFrame)

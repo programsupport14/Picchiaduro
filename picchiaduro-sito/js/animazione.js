@@ -174,7 +174,9 @@ function animLayer(c,R,M,PROC,px,py,pz){
  // dopo un colpo nessun piede deve restare sospeso: se entrambi i piedi sono sopra il pavimento il bacino scende finché il più basso appoggia
  if(live&&c.y===0&&!c.ko&&M.J&&R.B.fR&&R.B.fL&&c.m!=='flykick'&&!(c.m==='jump')){R.G.updateMatrixWorld(true);const sy=R.G.scale.y,ly=sd=>(R.B['f'+sd].getWorldPosition(anV).y-R.G.position.y)/sy-M.J['f'+sd].y,lo=Math.min(ly('R'),ly('L'));if(lo>.004){fHip.y-=Math.min(lo,.18);R.setHips(fHip.x,fHip.y,fHip.z)}}
  if(live&&c.y===0&&!c.crouch&&!c.ko&&!c.fpose&&(isG||src==='block')&&M.J&&R.B.fR&&R.B.fL)kneeAlign(R,FIN,src==='block'?.9:.85*A.sw);
- if(M.footFix!=null)footIK(c,R,M,A,FIN,dt,live&&c.y===0&&!c.ko);
+ if(M.footFix!=null)footIK(c,R,M,A,FIN,dt,live&&c.y===0&&!c.ko&&c.m!=='spartan');
+ // clip del morto: il punto più basso del corpo resta appoggiato al pavimento (né sospeso né sotto)
+ if(fcl&&fcl.c==='morto'){R.G.updateMatrixWorld(true);const sy=R.G.scale.y,J=M.J||{};let lo=1e9;for(const k of['hips','spine','neck','head','uR','uL','lR','lL','wR','wL','tR','tL','sR','sL','fR','fL']){const b=R.B[k];if(!b)continue;const mg=k[0]==='f'?((J['f'+k[1]]&&J['f'+k[1]].y+1)||.08):k==='head'?.1:k==='hips'||k==='spine'?.11:.05,y=b.getWorldPosition(anV).y/sy-mg;if(y<lo)lo=y}if(lo<1e8&&Math.abs(lo)>.003){R.G.position.y-=lo*sy;R.G.updateMatrixWorld(true)}}
  if(M.footFix==null&&src==='guard'&&c.y===0&&!c.rx&&!c.crouch&&A.sw>.98&&A.hx.lengthSq()<1e-5&&M.J&&R.B.fR&&R.B.fL){R.G.updateMatrixWorld(true);const ly=b=>(b.getWorldPosition(anV).y-R.G.position.y)/R.G.scale.y;M.footFix=Math.max(-.3,Math.min(.3,Math.min(M.J.fR.y,M.J.fL.y)-Math.min(ly(R.B.fR),ly(R.B.fL))+.02))}}
 // ---------- piedi piantati: IK a due ossa sulle gambe (solo grafica). Il piede in appoggio resta fermo nel mondo mentre bacino e busto si muovono:
 // non scivola in guardia, camminando o in parata. Quando si stacca da terra torna alla clip in pochi fotogrammi.

@@ -1,2 +1,7 @@
 <!DOCTYPE html>
-<meta http-equiv="refresh" content="0; url=picchiaduro-sito/">
+<html lang="it"><head><meta charset="utf-8"><title>Cafuddra!</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+// salva anche questa pagina d'ingresso, così il link funziona senza internet; poi apre il gioco
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw-ingresso.js').catch(()=>{});
+location.replace('picchiaduro-sito/');
+</script></head><body style="background:#070404"></body></html>
