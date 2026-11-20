@@ -1067,18 +1067,34 @@ function fMagic(T,k,v,f){propsInit();magicInit();pose3D(k);pose3D(v);holdFrame()
  if(T===360)endWin(k)}
 // Lillo: «Sottoterra». Pesta il terreno, sotto l'avversario si apre una buca e lui ci cade dentro; stacco sulla sezione del terreno
 // (cielo, erba, terra: come nell'immagine di Lillo): l'avversario scivola in fondo al cunicolo a L, disteso, e diventa tutto rosso. Lillo fa il saluto militare.
-function mineInit(){if(typeof PROPS==='undefined'||PROPS.mine)return;const G=new THREE.Group(),terra=mat(0xa0703e,{roughness:1}),scuro=mat(0x3a2414,{roughness:1}),erba=mat(0x5fae3c,{roughness:.9});
- const bx=(u0,u1,y0,y1,m,z0=-260,z1=260)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(u1-u0,y1-y0,z1-z0),m);b.position.set((u0+u1)/2,(y0+y1)/2,(z0+z1)/2);b.receiveShadow=true;G.add(b);return b};
- // il vuoto a L: pozzo u -130..130 da 0 a -470, cunicolo u -130..600 da -470 a -680
- bx(-2600,-130,-1500,-4,terra);bx(130,2600,-470,-4,terra);bx(600,2600,-680,-470,terra);bx(-130,2600,-1500,-680,terra);bx(-130,600,-680,-470,scuro,-300,-260);bx(-130,130,-470,-4,scuro,-300,-260);
- for(const[u0,u1]of[[-2600,-130],[130,2600]])bx(u0,u1,-24,-2,erba,240,262);
- const cielo=new THREE.Mesh(new THREE.PlaneGeometry(9000,4000),new THREE.MeshBasicMaterial({color:0x8fd3f2,fog:false}));cielo.position.set(0,1700,-900);G.add(cielo);
- const prato=new THREE.Mesh(new THREE.PlaneGeometry(9000,1400),mat(0x6cbf45,{roughness:1}));prato.rotation.x=-Math.PI/2;prato.position.set(0,-3,-900);G.add(prato);
+// terra disegnata: argilla con sfumature, sassi, granelli e radici (texture ripetuta); in alto lo strato scuro di humus con le radici dell'erba
+function soilTex(top){const N=256,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),R=(a,b)=>a+Math.random()*(b-a);
+ // rumore frattale che si ripete senza giunture (griglie con periodo che divide N)
+ const oct=[[4,.5],[8,.25],[16,.14],[32,.07],[64,.04]].map(([p,a])=>({p,a,v:Float32Array.from({length:p*p},()=>Math.random())}));
+ const nz=(x,y)=>{let t=0;for(const o of oct){const fx=x/N*o.p,fy=y/N*o.p,x0=Math.floor(fx),y0=Math.floor(fy),u=fx-x0,w=fy-y0,su=u*u*(3-2*u),sw=w*w*(3-2*w),V=(a,b)=>o.v[((b%o.p)+o.p)%o.p*o.p+((a%o.p)+o.p)%o.p];t+=o.a*((V(x0,y0)*(1-su)+V(x0+1,y0)*su)*(1-sw)+(V(x0,y0+1)*(1-su)+V(x0+1,y0+1)*su)*sw)}return t};
+ const im=g.createImageData(N,N),d=im.data,A=top?[44,30,20]:[104,70,42],B=top?[82,58,36]:[160,118,74];
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++){const n=Math.max(0,Math.min(1,(nz(x,y)-.3)*1.5)),gr=(Math.random()-.5)*22,k=(y*N+x)*4;for(let q=0;q<3;q++)d[k+q]=A[q]+(B[q]-A[q])*n+gr;d[k+3]=255}
+ g.putImageData(im,0,0);
+ const wrap=(f)=>{for(const ox of[-N,0,N])for(const oy of[-N,0,N]){g.save();g.translate(ox,oy);f();g.restore()}};
+ for(let i=0;i<(top?6:22);i++){const x=R(0,N),y=R(0,N),rx=R(1.5,top?3:6),ry=rx*R(.6,.9),a=R(0,3.14),t=R(95,150)|0;
+  wrap(()=>{g.save();g.translate(x,y);g.rotate(a);g.fillStyle='rgba(30,18,8,.28)';g.beginPath();g.ellipse(.8,1.2,rx,ry,0,0,6.3);g.fill();g.fillStyle=`rgb(${t},${t*.86|0},${t*.72|0})`;g.beginPath();g.ellipse(0,0,rx,ry,0,0,6.3);g.fill();g.fillStyle='rgba(255,240,220,.18)';g.beginPath();g.ellipse(-rx*.3,-ry*.35,rx*.45,ry*.35,0,0,6.3);g.fill();g.restore()})}
+ if(top){g.strokeStyle='rgba(190,160,110,.28)';for(let i=0;i<26;i++){const x0=R(0,N);wrap(()=>{g.lineWidth=R(.4,1);g.beginPath();let x=x0,y=0;g.moveTo(x,y);for(let k=0;k<5;k++){x+=R(-6,6);y+=R(5,18);g.lineTo(x,y)}g.stroke()})}}
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t}
+function mineInit(){if(typeof PROPS==='undefined'||PROPS.mine)return;const G=new THREE.Group(),tx=soilTex(0),th=soilTex(1),txd=tx.clone();txd.needsUpdate=true;
+ const fronte=new THREE.MeshStandardMaterial({map:tx,roughness:1}),humus=new THREE.MeshStandardMaterial({map:th,roughness:1}),pareti=new THREE.MeshStandardMaterial({map:txd,color:0x8a7060,roughness:1});tx.repeat.set(1/330,1/330);th.repeat.set(1/240,1/240);txd.repeat.set(1/220,1/220);
+ // fronte del taglio: un solo poligono con la tacca a L (pozzo u -130..130 fino a -470, cunicolo fino a u 600, fondo a -680); le UV sono le coordinate stesse, quindi la terra non si stira
+ const sh=new THREE.Shape([[-2600,-2],[-130,-2],[-130,-680],[600,-680],[600,-470],[130,-470],[130,-2],[2600,-2],[2600,-1600],[-2600,-1600]].map(([x,y])=>new THREE.Vector2(x,y)));
+ const fr=new THREE.Mesh(new THREE.ShapeGeometry(sh),fronte);fr.position.z=262;G.add(fr);
+ const sh2=new THREE.Shape([[-2600,-2],[-130,-2],[-130,-95],[-2600,-95]].map(([x,y])=>new THREE.Vector2(x,y))),sh3=new THREE.Shape([[130,-2],[2600,-2],[2600,-95],[130,-95]].map(([x,y])=>new THREE.Vector2(x,y)));
+ for(const q of[sh2,sh3]){const m=new THREE.Mesh(new THREE.ShapeGeometry(q),humus);m.position.z=263;G.add(m)}
+ // pareti del pozzo e del cunicolo (dentro il taglio), più scure
+ const pl=(w,h,x,y,z,rx,ry)=>{const g=new THREE.PlaneGeometry(w,h),uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*w,uv.getY(i)*h);const m=new THREE.Mesh(g,pareti);m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,0);m.receiveShadow=true;G.add(m)};
+ pl(260,470,0,-236,-260);pl(470,680,-130,-340,0,0,Math.PI/2);pl(470,470,130,-236,0,0,-Math.PI/2);pl(730,210,235,-575,-260);pl(730,520,235,-680,0,-Math.PI/2);pl(470,520,365,-470,0,Math.PI/2);pl(210,520,600,-575,0,0,-Math.PI/2);
  const L=new LProxy(0xff2a10,0,900,1.2);L.position.set(250,-560,120);G.add(L);G.userData.L=L;G.visible=false;scene.add(G);PROPS.mine=G}
 const redMats=c=>c.rig.mats||[c.rig.m];
 function redOn(c,u){for(const m of redMats(c)){if(!m.userData.c0){m.userData.c0=m.color.getHex();m.userData.e0=m.emissive?m.emissive.getHex():0}m.color.setHex(m.userData.c0).lerp(new THREE.Color(0xff1a0a),u);if(m.emissive)m.emissive.setHex(0xff1800)}c.glow=.34*u}
 function redOff(c){if(!c||!c.rig)return;for(const m of redMats(c))if(m.userData.c0!=null){m.color.setHex(m.userData.c0);if(m.emissive)m.emissive.setHex(m.userData.e0);delete m.userData.c0}c.glow=0}
-function mineEnd(){const G=PROPS.mine;if(!G)return;G.visible=false;G.userData.L.intensity=0;if(typeof curArena!=='undefined'&&ARENAS[curArena])ARENAS[curArena].visible=true;if(PROPS.mv){const v=PROPS.mv;redOff(v);v.fy=0;PROPS.mv=null}}
+function mineEnd(){const G=PROPS.mine;if(!G)return;G.visible=false;G.userData.L.intensity=0;if(PROPS.mv){const v=PROPS.mv;redOff(v);v.fy=0;v.yawO=null;v.rig.G.rotation.z=0;v.rig.G.rotation.order='XYZ';PROPS.mv=null}}
 function fMine(T,k,v,f){propsInit();mineInit();pose3D(k);pose3D(v);holdFrame();const G=PROPS.mine,L=G.userData.L,J=()=>Math.random()-.5;
  const STAND=P({h:600,t:-2,hd:4,tw:16,n:[45,240],f:[35,245],nl:[-300,0,0],fl:[240,0,0]});
  if(T===1){v.fpose=DAZE();v.fk=.2;k.fpose=STAND;k.fk=.15;CUT((k.x+v.x)/2,330,1.1,{yaw:-f*.12,dol:.001});PROPS.mv=v;PROPS.mx=null;PROPS.land=0;v.fy=0}
@@ -1090,10 +1106,10 @@ function fMine(T,k,v,f){propsInit();mineInit();pose3D(k);pose3D(v);holdFrame();c
   for(let i=0;i<30;i++){const a=Math.random()*6.28;fx.push({x:v.x+Math.cos(a)*130,y:GROUND-4,z:Math.sin(a)*80,vx:Math.cos(a)*(2+Math.random()*5),vy:-2-Math.random()*4,l:24+Math.random()*20,c:i%2?'#8a6a48':'#6e5236',r:3+Math.random()*5,g:.12})}
   v.fpose=P({h:640,t:-20,hd:-30,x:-10,n:[200,-160],f:[180,-180],nl:[-150,0,0],fl:[120,0,0]});v.fk=.3;sfx('urlo');PROPS.mx=v.x;PROPS.vy=0}
  // 2) cade nella buca
- if(PROPS.mx!=null&&T>44&&!PROPS.land){PROPS.vy+=1.3;v.y=Math.min(680,v.y+PROPS.vy);v.x=PROPS.mx;if(v.y>=680&&T>60){PROPS.land=T;v.fy=-680;sfx('thud');shake=12}}
+ if(PROPS.mx!=null&&T>44&&!PROPS.land){PROPS.vy+=1.3;v.y=Math.min(680,v.y+PROPS.vy);v.x=PROPS.mx;if(v.y>=680&&T>60){PROPS.land=T;sfx('thud');shake=12}}
  // 3) sezione del terreno
- if(T===64){G.visible=true;G.position.set(PROPS.mx,0,0);G.scale.x=f;if(ARENAS[curArena])ARENAS[curArena].visible=false;CUT(PROPS.mx+f*190,-170,.46,{yaw:0,pitch:0,dol:0})}
- if(PROPS.land){const a=T-PROPS.land;v.fpose=null;v.fclip={c:'morto',f:Math.min(71,30+a*.9),b:a<2?10:6};v.y=680;v.x=PROPS.mx+f*Math.min(250,a*7);
+ if(T===64){G.visible=true;G.position.set(PROPS.mx,0,0);G.scale.x=f;CUT(PROPS.mx+f*190,-170,.46,{yaw:0,pitch:0,dol:0})}
+ if(PROPS.land){const a=T-PROPS.land,R=v.rig.G,w=Math.min(1,a/14),e=w*w*(3-2*w);v.fclip=null;v.fpose=P({h:612,t:-3,hd:-6,tw:0,n:[40,250],f:[30,255],nl:[-60,0,0],fl:[60,0,0]});v.fk=.3;v.yawO=-f*Math.PI/2;R.rotation.order='ZYX';R.rotation.z=-f*Math.PI/2*e;v.y=680+(R.scale.y+600-680)*e;v.x=PROPS.mx+f*Math.min(250,a*6);
   const u=Math.max(0,Math.min(1,(a-24)/40));redOn(v,u);L.intensity=u*3.2;if(a===24)sfx('sfrigolio');if(a===30)sfx('fuoco');if(a===70)CUT(PROPS.mx+f*300,-560,.95,{yaw:-f*.06,pitch:.02,dol:.0005});if(a===130)CUT(PROPS.mx+f*190,-170,.46,{yaw:0,pitch:0,dol:0})}
  // 4) saluto militare sopra la buca
  if(T===150){k.fpose=P({h:604,t:-4,hd:-6,tw:30,n:[70,-150],f:[30,250],nl:[-300,0,0],fl:[240,0,0]});k.fk=.2;sfx('stoffa')}
