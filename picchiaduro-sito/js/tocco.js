@@ -17,11 +17,13 @@ const fsLabel=()=>FS.on()?'Esci dallo schermo intero':'Schermo intero';
   b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,off))});
  const ro=document.createElement('div');ro.id='ruota';ro.innerHTML='<div style="font-size:54px">📱↻</div><div>Gira il telefono in orizzontale per giocare</div><small style="opacity:.6">oppure tocca qui per continuare così</small>';ro.addEventListener('click',e=>{if(e.target.tagName!=='BUTTON')ro.remove()});const rb=document.createElement('button');rb.textContent='Schermo intero';rb.onclick=fsToggle;ro.append(rb);document.body.append(ro);
  // levetta: centro dove si appoggia il pollice, raggio 60 px
- const st=tc.querySelector('.stick'),kn=tc.querySelector('.knob');let sid=null,c0=null;
- const setDir=(x,y)=>{const m=Math.hypot(x,y),r=60,u=m>r?r/m:1;kn.style.transform=`translate(${x*u}px,${y*u}px)`;const dx=x/r,dy=y/r;keys.left=dx<-.4?1:0;keys.right=dx>.4?1:0;keys.up=dy<-.6?1:0;keys.down=dy>.5?1:0};
- st.addEventListener('pointerdown',e=>{e.preventDefault();sid=e.pointerId;st.setPointerCapture(sid);const r=st.getBoundingClientRect();c0=[r.left+r.width/2,r.top+r.height/2];demo=null;setDir(e.clientX-c0[0],e.clientY-c0[1])});
+ const FT={c:0,used:1};const st=tc.querySelector('.stick'),kn=tc.querySelector('.knob');let sid=null,c0=null;
+ const setDir=(x,y)=>{const m=Math.hypot(x,y),r=60,u=m>r?r/m:1;kn.style.transform=`translate(${x*u}px,${y*u}px)`;const dx=x/r,dy=y/r,now=performance.now();
+  // scatto: levetta spinta di colpo da ferma a fondo corsa (entro 0,15 s), come col controller
+  if(Math.abs(dx)<.3){FT.c=now;FT.used=0}else if(!FT.used&&Math.abs(dx)>.8&&now-FT.c<150){FT.used=1;latch|=dx<0?BITS.flickL:BITS.flickR}keys.left=dx<-.4?1:0;keys.right=dx>.4?1:0;keys.up=dy<-.6?1:0;keys.down=dy>.5?1:0};
+ st.addEventListener('pointerdown',e=>{e.preventDefault();sid=e.pointerId;st.setPointerCapture(sid);const r=st.getBoundingClientRect();c0=[r.left+r.width/2,r.top+r.height/2];demo=null;FT.used=1;setDir(e.clientX-c0[0],e.clientY-c0[1])});
  st.addEventListener('pointermove',e=>{if(e.pointerId!==sid)return;e.preventDefault();setDir(e.clientX-c0[0],e.clientY-c0[1])});
- const up=e=>{if(e.pointerId!==sid)return;sid=null;kn.style.transform='';keys.left=keys.right=keys.up=keys.down=0};st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+ const up=e=>{if(e.pointerId!==sid)return;sid=null;FT.c=performance.now();FT.used=0;kn.style.transform='';keys.left=keys.right=keys.up=keys.down=0};st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
  // il tasto Mossa finale si vede solo durante ACCOPPALO!; i comandi si nascondono nei menu
  setInterval(()=>{const fin=typeof state!=='undefined'&&state==='finish';const fbt=tc.querySelector('.fat');if(fbt.hidden===fin)fbt.hidden=!fin;const menu=typeof selOpen==='function'&&selOpen();tc.classList.toggle('off',!!menu||typeof loading!=='undefined'&&loading)},120);
 })();

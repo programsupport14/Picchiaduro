@@ -61,7 +61,7 @@ function ragPose(G,out,hip){const P=nm=>new THREE.Vector3(G.p[RAGI[nm]*3],G.p[RA
 function guardArms(T,ph){sampleClip(MOCAP.guard,ph,GRD,anV);for(const k of['uR','lR','uL','lL'])T[k].copy(GRD[k]).premultiply(anQ1.copy(T.spine).multiply(anQ2.copy(GRD.spine).invert()))}
 const qLog=(q,o)=>{let w=q.w,x=q.x,y=q.y,z=q.z;if(w<0){w=-w;x=-x;y=-y;z=-z}const s=Math.sqrt(x*x+y*y+z*z);if(s<1e-7)return o.set(0,0,0);const a=2*Math.atan2(s,w)/s;return o.set(x*a,y*a,z*a)};
 const qExp=(v,o)=>{const a=v.length();if(a<1e-7)return o.set(0,0,0,1);const s=Math.sin(a/2)/a;return o.set(v.x*s,v.y*s,v.z*s,Math.cos(a/2))};
-const TGP=newPose(),pHip=new THREE.Vector3(),inQ=new THREE.Quaternion(),inV=new THREE.Vector3(),inV2=new THREE.Vector3();
+const WG={b:.82,f:.6},TGW=newPose(),gHip=new THREE.Vector3(),TGP=newPose(),pHip=new THREE.Vector3(),inQ=new THREE.Quaternion(),inV=new THREE.Vector3(),inV2=new THREE.Vector3();
 const RX=new THREE.Quaternion(),GRD=newPose(),FIN=newPose(),TGT=newPose(),tHip=new THREE.Vector3(),fHip=new THREE.Vector3();
 function animLayer(c,R,M,PROC,px,py,pz){
  const A=c.A||(c.A={src:'',out:newPose(),prev:newPose(),hip:new THREE.Vector3(px,py,pz),prevHip:new THREE.Vector3(px,py,pz),ox:Object.fromEntries(AK.map(k=>[k,new THREE.Vector3()])),ov:Object.fromEntries(AK.map(k=>[k,new THREE.Vector3()])),hx:new THREE.Vector3(),hv:new THREE.Vector3(),lt:tick,gph:0,wph:0,air:0,land:-99,rag:null,blend:7,jd:0});
@@ -88,6 +88,8 @@ function animLayer(c,R,M,PROC,px,py,pz){
    if(Math.abs(dx)+Math.abs(dz)>1e-7){for(let i=0;i<G.p.length;i+=3){G.p[i]+=dx;G.o[i]+=dx;G.p[i+2]+=dz;G.o[i+2]+=dz}G.still=0}G.L.copy(L)}
   for(let s=0;s<dt&&G.still<30;s++)ragStep(G);if(G.thud){if(typeof sfx==='function')sfx(G.hit>1?'legno':'thud');if(typeof shake!=='undefined'&&G.hit<2)shake=Math.max(shake,4*G.thud);G.thud=0}ragPose(G,TGT,tHip)}
  else if(clip){sampleClip(clip,f,TGT,tHip);tHip.set(tHip.x*M.legR,-1+tHip.y*M.legR,tHip.z*M.legR);
+  // camminata in guardia: le gambe restano larghe e piegate come nella guardia (passi corti), l'anca resta bassa; la clip dà solo il ritmo del passo
+  if(clip===MOCAP.walkB||clip===MOCAP.walkF){const k=clip===MOCAP.walkB?WG.b:WG.f;sampleClip(MOCAP.guard,A.gph,TGW,gHip);gHip.set(gHip.x*M.legR,-1+gHip.y*M.legR,gHip.z*M.legR);for(const j of['hips','tR','sR','fR','tL','sL','fL'])TGT[j].slerp(TGW[j],k);tHip.lerp(gHip,k)}
   if(clip===MOCAP.jump||clip===MOCAP.land)guardArms(TGT,A.gph)}
  else{for(const k of AK)TGT[k].copy(PROC[k]);tHip.set(px,py,pz)}
  // transizione inerziale quando cambia la sorgente: differenza iniziale e velocità relativa smorzate da una molla critica
