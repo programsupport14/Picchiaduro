@@ -20,7 +20,7 @@ function homeOk(){wake();const it=HOME.items[HOME.cur];if(!it)return;sfx('ui_ok'
 function homeBack(){if(HOME.panel!=='main'){homePanel('main');return}if(p1&&!net){sfx('ui_no');closeHome()}}
 function homeGo(m){if(net)return;mode=m;closeHome();openSel()}
 async function homeFat(k){if(net||loading)return;closeHome();try{await watchFat(k)}catch(e){}}
-function openHome(panel){if(net)return;if(SEL.open)closeSel();HOME.open=true;HOME.panel=panel||'main';HOME.cur=0;HOME.pad={x:1,c:1,s:1,dir:1};$('home').hidden=false;homeFigs();homeDraw();if(typeof g!=='undefined'){g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,g.canvas.width,g.canvas.height);gh.setTransform(1,0,0,1,0,0);gh.clearRect(0,0,gh.canvas.width,gh.canvas.height);HUDSIG=''}$('wrap').scrollIntoView({block:'nearest'})}
+function openHome(panel){if(net)return;if(SEL.open)closeSel();HOME.open=true;HOME.still=null;HOME.panel=panel||'main';HOME.cur=0;HOME.pad={x:1,c:1,s:1,dir:1};$('home').hidden=false;homeFigs();homeDraw();if(typeof g!=='undefined'){g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,g.canvas.width,g.canvas.height);gh.setTransform(1,0,0,1,0,0);gh.clearRect(0,0,gh.canvas.width,gh.canvas.height);HUDSIG=''}$('wrap').scrollIntoView({block:'nearest'})}
 function closeHome(){HOME.open=false;$('home').hidden=true;if(typeof titClear==='function'&&TIT.scene)titClear()}
 function homeFigs(){const box=$('hfig');if(box.dataset.ok||typeof ROSTER==='undefined'||!ROSTER.length)return;box.dataset.ok=1;const L=ROSTER.filter(e=>e&&e.id&&!e.bloccato&&e.figura),n=L.length,pos=[[-2,.86,3],[101,.86,3],[9,.74,2],[90,.74,2],[19,.64,1],[80,.64,1],[27,.56,0],[72,.56,0]];
  L.slice(0,8).forEach((e,i)=>{const im=new Image(),p=pos[i];im.alt='';im.src=fdir(e)+e.figura;im.style.left=p[0]+'%';im.style.height=(p[1]*100)+'%';im.style.zIndex=p[2];im.style.animationDelay=(.08*i)+'s';if(p[0]>50)im.classList.add('r');im.dataset.d=p[2];box.append(im)})}
@@ -39,7 +39,8 @@ function homeInit(){if(HOME.sc)return;HOME.sc=new THREE.Scene();HOME.cam=new THR
    float ray=pow(max(0.,sin(atan(g.y,g.x)*9.+uT*.25+fb(vec2(atan(g.y,g.x)*3.,uT*.1))*4.)),6.);col+=vec3(.6,.12,.02)*ray*.1*exp(-dot(g,g)*.9);
    vec2 c=p-.5;col*=1.-dot(c,c)*1.5;col*=smoothstep(0.,.5,uT*.7);gl_FragColor=vec4(col,1.);}`});
  const q=new THREE.Mesh(new THREE.PlaneGeometry(2,2),HOME.bg);q.frustumCulled=false;HOME.sc.add(q)}
-function homeRender(){if(!renderer)return;homeInit();HOME.t+=1;HOME.bg.uniforms.uT.value=HOME.t/60;renderer.autoClear=true;renderer.setRenderTarget(null);renderer.render(HOME.sc,HOME.cam);
+// sfondo del menu fermo: la fiammella animata non c'è più, lo sfondo si disegna una volta sola (e di nuovo solo se cambia la dimensione della finestra o c'è il logo 3D)
+function homeRender(){if(!renderer)return;homeInit();const cw=renderer.domElement.width,ch=renderer.domElement.height,key=cw+'x'+ch,l3=typeof TIT!=='undefined'&&TIT.cur;if(HOME.still===key&&!l3)return;HOME.still=key;HOME.bg.uniforms.uT.value=2.2;renderer.autoClear=true;renderer.setRenderTarget(null);renderer.render(HOME.sc,HOME.cam);
  if(typeof titLogo==='function'){const ok=titLogo();$('home').classList.toggle('g3',!!ok);if(ok)titRender()}}
 // ---------- tastiera e controller nei menu ----------
 function menuKey(e){if(HOME.cfg){e.preventDefault();cfgKey(e);return true}if(!HOME.open)return false;const k=e.code;

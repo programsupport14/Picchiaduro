@@ -81,7 +81,8 @@ async function loadGLB(e,dir,prog){const gl=e.js?await glbFromJs(e,dir,prog):awa
  if(wp(map.uR).x>wp(map.uL).x){sc.rotation.y+=Math.PI;C.updateMatrixWorld(true)}// guarda verso -z: lo giro (il destro deve stare a x negativa)
  const v=new THREE.Vector3(),P0=meshes.map(m=>{const n=m.geometry.attributes.position.count,a=new Float32Array(n*3);for(let i=0;i<n;i++){m.getVertexPosition(i,v);v.applyMatrix4(m.matrixWorld);a[i*3]=v.x;a[i*3+1]=v.y;a[i*3+2]=v.z}return a});
  let mnY=1e9,mxY=-1e9;for(const a of P0)for(let i=1;i<a.length;i+=3){if(a[i]<mnY)mnY=a[i];if(a[i]>mxY)mxY=a[i]}
- const h0=wp(map.hips),s=1.96*(e.altezza||1)/(mxY-mnY),off=v3(-h0.x*s,-1-mnY*s,-h0.z*s);C.scale.setScalar(s);C.position.copy(off);C.updateMatrixWorld(true);
+ e._h0=mxY-mnY;// altezza: "altezza" nel roster (moltiplica l'altezza standard) oppure quella vera del modello di Meshy (1,80 m = altezza standard)
+ const HS=e.altezza?1.96*e.altezza:1.96*Math.max(.88,Math.min(1.12,(mxY-mnY)/1.8)),h0=wp(map.hips),s=HS/(mxY-mnY),off=v3(-h0.x*s,-1-mnY*s,-h0.z*s);C.scale.setScalar(s);C.position.copy(off);C.updateMatrixWorld(true);
  const bi=new Map(bones.map((b,i)=>[b,i])),partB=bones.map(b=>{const A=anc(b);return map.head&&A.includes(map.head)?5:A.includes(map.uR)?1:A.includes(map.uL)?2:A.includes(map.tR)?3:A.includes(map.tL)?4:0});
  let main=0;meshes.forEach((m,i)=>{if(m.geometry.attributes.position.count>meshes[main].geometry.attributes.position.count)main=i});
  // mani: lunghezza del pugno oltre il polso e colore (pelle o guanto), per impugnare bene gli oggetti negli Accoppalo

@@ -285,6 +285,34 @@
     51.2
    ],
    "ritratto_zoom": 1.79
+  },
+  {
+   "id": "lillo",
+   "nome": "Lillo",
+   "cartella": "lillo",
+   "tipo": "glb",
+   "normali": false,
+   "ritratto": "ritratto.jpg",
+   "figura": "figura.webp",
+   "ritratto_centro": [
+    44.7,
+    54.7
+   ],
+   "ritratto_zoom": 1.84
+  },
+  {
+   "id": "mattityahu",
+   "nome": "Mattityahu",
+   "cartella": "mattityahu",
+   "tipo": "glb",
+   "normali": false,
+   "ritratto": "ritratto.jpg",
+   "figura": "figura.webp",
+   "ritratto_centro": [
+    43.9,
+    56.3
+   ],
+   "ritratto_zoom": 2.23
   }
  ]
 }
