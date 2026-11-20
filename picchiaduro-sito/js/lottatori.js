@@ -165,7 +165,12 @@ function makePool(M,n){const out=[];for(let i=0;i<n;i++){const r=makeRig(M,0xfff
 // i rig restano in memoria per id lottatore: tra un incontro e l'altro vengono solo tolti dalla scena e rimessi
 const RIGC={};let NEEDWARM=1;const WARMED={};
 function parkRig(R){scene.remove(R.G);if(R.head)scene.remove(R.head);if(R._pool)for(const q of R._pool)scene.remove(q.P)}
-function rigFor(M,id,alt){const k=id+(alt?'#2':'');let R=RIGC[k];if(R){scene.add(R.G);if(R.head)scene.add(R.head);if(R._pool)for(const q of R._pool)scene.add(q.P);return R}
+// Sul telefono la memoria della scheda video è poca: i lottatori messi da parte (per esempio guardando un Accoppalo dopo l'altro)
+// liberano geometrie e texture dalla GPU. Restano in memoria normale e three.js le ricarica da solo se tornano in campo.
+function rigObjs(R){return[R.G,R.head,...(R._pool||[]).map(q=>q.P)].filter(Boolean)}
+function rigRes(R,set){for(const o of rigObjs(R))o.traverse(m=>{if(m.geometry)set.add(m.geometry);for(const mt of[].concat(m.material||[])){set.add(mt);for(const k in mt){const v=mt[k];if(v&&v.isTexture)set.add(v)}}});return set}
+function freeRigs(keep){const used=new Set();for(const R of keep)rigRes(R,used);for(const k in RIGC){const R=RIGC[k];if(keep.includes(R)||R._free)continue;const mine=rigRes(R,new Set());for(const x of mine)if(!used.has(x)&&x.dispose)x.dispose();R._free=1}}
+function rigFor(M,id,alt){const k=id+(alt?'#2':'');let R=RIGC[k];if(R){if(R._free){R._free=0;NEEDWARM=1}scene.add(R.G);if(R.head)scene.add(R.head);if(R._pool)for(const q of R._pool)scene.add(q.P);return R}
  NEEDWARM=1;R=RIGC[k]=makeRig(M,alt?(M.kind==='glb'?0xb8c8ff:0x7fa2e6):0xffffff,alt?0xaec6ff:0xffffff);
  // le 6 copie per i pezzi tagliati negli Accoppalo: create una volta sola, la prima volta che servono
  Object.defineProperty(R,'pool',{get(){if(!R._pool)R._pool=makePool(M,6);return R._pool}});return R}
