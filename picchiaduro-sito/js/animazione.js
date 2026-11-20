@@ -3,7 +3,7 @@ const KA={kmax:18,toe:.3,bz:.09,by:.025,bt:.15,bs:.2};
 // animazione.js: strato visivo sopra la logica 2D. Sceglie per ogni lottatore tra motion capture (CMU), pose procedurali
 // e ragdoll, con dissolvenze, poi aggiunge le reazioni ai colpi. Non cambia la simulazione: l'online resta deterministico.
 let MOCAP=null;const AK=['hips','spine','neck','head','uR','lR','tR','sR','fR','uL','lL','tL','sL','fL'];
-async function loadMocap(){try{const d=await getJSON('mocap/clip.json');for(const k in d.clip){const c=d.clip[k];for(const j in c.q)c.q[j]=Float32Array.from(c.q[j]);c.root=Float32Array.from(c.root)}MOCAP=d.clip;try{const P=newPose(),r=new THREE.Vector3(),v=new THREE.Vector3(),w=new THREE.Vector3();for(const k of['jab','cross','special']){const cl=MOCAP[k],mc=MOVECLIP[k];if(!cl||!mc)continue;sampleClip(cl,cl.peak||0,P,r);const e=s=>v.copy(DIRS['u'+s]).applyQuaternion(P['u'+s]).z+w.copy(DIRS['l'+s]).applyQuaternion(P['l'+s]).z;mc.side=e('R')>e('L')?1:-1}}catch(e){}}catch(e){console.warn('motion capture non caricato',e);MOCAP=null}}
+async function loadMocap(){try{const d=await getJSON('mocap/clip.json');for(const k in d.clip){const c=d.clip[k];for(const j in c.q)c.q[j]=Float32Array.from(c.q[j]);c.root=Float32Array.from(c.root)}MOCAP=d.clip;try{const P=newPose(),r=new THREE.Vector3(),v=new THREE.Vector3(),w=new THREE.Vector3();for(const k of['jab','cross','special']){const mc=MOVECLIP[k],cl=mc&&MOCAP[mc.c];if(!cl||!mc)continue;sampleClip(cl,cl.peak||0,P,r);const e=s=>v.copy(DIRS['u'+s]).applyQuaternion(P['u'+s]).z+w.copy(DIRS['l'+s]).applyQuaternion(P['l'+s]).z;mc.side=e('R')>e('L')?1:-1}}catch(e){}}catch(e){console.warn('motion capture non caricato',e);MOCAP=null}}
 const anQ1=new THREE.Quaternion(),anQ2=new THREE.Quaternion(),anV=new THREE.Vector3(),anV2=new THREE.Vector3(),anM=new THREE.Matrix4();
 const newPose=()=>Object.fromEntries(AK.map(k=>[k,new THREE.Quaternion()]));
 // clip -> rotazioni astratte (fotogramma frazionario, interpolato) e bacino in unità canoniche
@@ -11,7 +11,7 @@ function sampleClip(cl,f,out,root){const n=cl.n;let i0,i1;if(cl.loop){f=((f%n)+n
  for(const k of AK){anQ1.fromArray(cl.q[k],i0*4);anQ2.fromArray(cl.q[k],i1*4);out[k].copy(anQ1).slerp(anQ2,u)}
  const r=cl.root;root.set(r[i0*3]+(r[i1*3]-r[i0*3])*u,r[i0*3+1]+(r[i1*3+1]-r[i0*3+1])*u,r[i0*3+2]+(r[i1*3+2]-r[i0*3+2])*u)}
 // mosse col motion capture: il picco della clip cade nel fotogramma logico in cui il colpo va a segno
-const MOVECLIP={flykick:{c:'flykick',lin:1},combo:{c:'combo',lin:1},jab:{c:'jab',hit:5},cross:{c:'cross',hit:11},special:{c:'special',hit:13},kick:{c:'kick',hit:12},spartan:{c:'spartan',hit:20},stagger:{c:'colpito',lin:1}};
+const MOVECLIP={flykick:{c:'flykick',lin:1},combo:{c:'combo',lin:1},jab:{c:'jabB',hit:5},cross:{c:'montante',hit:11},spazzata:{c:'spazzata',hit:20},special:{c:'special',hit:13},kick:{c:'kick',hit:12},spartan:{c:'spartan',hit:20},stagger:{c:'colpito',lin:1}};
 const moveLen=id=>MOVES[id].keys.reduce((a,k)=>a+k[0],0);
 const herm=(p0,p1,m0,m1,L,x)=>{const u=x/L,u2=u*u,u3=u2*u;return(2*u3-3*u2+1)*p0+(u3-2*u2+u)*L*m0+(-2*u3+3*u2)*p1+(u3-u2)*L*m1};
 function warpT(t,T,hit,cl){const pk=cl.peak,e=cl.n-1,L2=Math.max(1,T-hit),s0=pk/hit,s2=(e-pk)/L2,dh=s0+s2>0?2*s0*s2/(s0+s2):0;if(t<=0)return 0;if(t<=hit)return herm(0,pk,s0*.4,dh,hit,t);if(t>=T)return e;return herm(pk,e,dh,s2*.5,L2,t-hit)}
@@ -103,7 +103,7 @@ function animLayer(c,R,M,PROC,px,py,pz){
  // ---------- strati sopra la clip (solo grafica): guardia da lottatore, meccanica del colpo, reazioni, salto, parata, spalle ----------
  for(const k of AK)FIN[k].copy(A.out[k]);fHip.copy(A.hip);
  const live=src!=='rag'&&src!=='proc',Tx=c.f*.57,Tz=.82,sm5=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*t*(t*(t*6-15)+10)};
- const isG=src==='guard'||src.startsWith('walk'),mv=live&&c.m&&MOVECLIP[c.m]?c.m:null,punch=mv&&mv!=='kick'&&mv!=='spartan'&&mv!=='stagger'&&mv!=='flykick';
+ const isG=src==='guard'||src.startsWith('walk'),mv=live&&c.m&&MOVECLIP[c.m]?c.m:null,punch=mv&&mv!=='kick'&&mv!=='spazzata'&&mv!=='spartan'&&mv!=='stagger'&&mv!=='flykick';
  lerpA(A,'gw',live&&!mv&&src!=='block'&&src!=='kof'&&!c.fclip&&!c.dance?(c.m==='hurt'?.45:1):0,src==='block'?.5:.2,dt);lerpA(A,'sw',isG?1:src.startsWith('land')?.8:punch?.6:0,.18,dt);lerpA(A,'pw',punch?1:0,.3,dt);lerpA(A,'kw',(mv==='kick'||mv==='spartan')?1:0,.25,dt);
  // estensione di braccia e gambe verso l'avversario, misurata sulla clip: guida la rotazione del tronco
  const ext=(a,b)=>{inV.copy(DIRS[a]).applyQuaternion(FIN[a]);inV2.copy(DIRS[b]).applyQuaternion(FIN[b]);return((inV.x+inV2.x)*Tx+(inV.z+inV2.z)*Tz)/2};
@@ -176,7 +176,7 @@ function animLayer(c,R,M,PROC,px,py,pz){
  // dopo un colpo nessun piede deve restare sospeso: se entrambi i piedi sono sopra il pavimento il bacino scende finché il più basso appoggia
  if(live&&c.y===0&&!c.ko&&M.J&&R.B.fR&&R.B.fL&&c.m!=='flykick'&&!(c.m==='jump')){R.G.updateMatrixWorld(true);const sy=R.G.scale.y,ly=sd=>(R.B['f'+sd].getWorldPosition(anV).y-R.G.position.y)/sy-M.J['f'+sd].y,lo=Math.min(ly('R'),ly('L'));if(lo>.004){fHip.y-=Math.min(lo,.18);R.setHips(fHip.x,fHip.y,fHip.z)}}
  if(live&&c.y===0&&!c.crouch&&!c.ko&&!c.fpose&&(isG||src==='block')&&M.J&&R.B.fR&&R.B.fL)kneeAlign(R,FIN,src==='block'?.9:.85*A.sw);
- if(M.footFix!=null)footIK(c,R,M,A,FIN,dt,live&&c.y===0&&!c.ko&&c.m!=='spartan');
+ if(M.footFix!=null)footIK(c,R,M,A,FIN,dt,live&&c.y===0&&!c.ko&&c.m!=='spartan'&&c.m!=='spazzata');
  // clip del morto: il punto più basso del corpo resta appoggiato al pavimento (né sospeso né sotto)
  if(fcl&&fcl.c==='morto'){R.G.updateMatrixWorld(true);const sy=R.G.scale.y,J=M.J||{};let lo=1e9;for(const k of['hips','spine','neck','head','uR','uL','lR','lL','wR','wL','tR','tL','sR','sL','fR','fL']){const b=R.B[k];if(!b)continue;const mg=k[0]==='f'?((J['f'+k[1]]&&J['f'+k[1]].y+1)||.08):k==='head'?.1:k==='hips'||k==='spine'?.11:.05,y=b.getWorldPosition(anV).y/sy-mg;if(y<lo)lo=y}if(lo<1e8&&Math.abs(lo)>.003){R.G.position.y-=lo*sy;R.G.updateMatrixWorld(true)}}
  if(M.footFix==null&&src==='guard'&&c.y===0&&!c.rx&&!c.crouch&&A.sw>.98&&A.hx.lengthSq()<1e-5&&M.J&&R.B.fR&&R.B.fL){R.G.updateMatrixWorld(true);const ly=b=>(b.getWorldPosition(anV).y-R.G.position.y)/R.G.scale.y;M.footFix=Math.max(-.3,Math.min(.3,Math.min(M.J.fR.y,M.J.fL.y)-Math.min(ly(R.B.fR),ly(R.B.fL))+.02))}}
