@@ -257,6 +257,34 @@
     57.2
    ],
    "ritratto_zoom": 2.02
+  },
+  {
+   "id": "damiano",
+   "nome": "Damiano",
+   "cartella": "damiano",
+   "tipo": "glb",
+   "normali": false,
+   "ritratto": "ritratto.jpg",
+   "figura": "figura.webp",
+   "ritratto_centro": [
+    44.8,
+    57.6
+   ],
+   "ritratto_zoom": 2.33
+  },
+  {
+   "id": "simone",
+   "nome": "Simone",
+   "cartella": "simone",
+   "tipo": "glb",
+   "normali": false,
+   "ritratto": "ritratto.jpg",
+   "figura": "figura.webp",
+   "ritratto_centro": [
+    42.3,
+    51.2
+   ],
+   "ritratto_zoom": 1.79
   }
  ]
 }

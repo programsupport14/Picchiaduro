@@ -979,7 +979,7 @@ function fSplit(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();const ez=x=
 // ---------- Tano: «Tutti devoti» ----------
 // giunge le mani in preghiera (polsi vicini, non incrociati), china la testa; campana e coro, un raggio di luce dal cielo
 // e la statua della santa (GLB fornito, oggetti/statua.glb) cade in piedi, dritta, sull'avversario che resta schiacciato sotto. Alla fine: «SEMU TUTTI DEVOTI TUTTI».
-const PRAYK={h:10,fw:34,lat:15,pl:-.15,pb:-.5,tw:10,yaw:.75};// mani giunte: altezza fra vita e collo, distanza davanti al petto, mezza distanza fra i polsi
+const PRAYK={h:8,fw:40,lat:19,pl:0,pb:-.9,tw:10,yaw:.75};// mani giunte: altezza fra vita e collo, distanza davanti al petto, mezza distanza fra i polsi
 // pozze di sangue che escono da sotto la statua (dischi rossi lucidi che si allargano)
 function bpoolStart(x){const G=PROPS.bpool||(PROPS.bpool=(()=>{const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:0x5e0008,roughness:.18,metalness:.1,polygonOffset:true,polygonOffsetFactor:-2});for(let i=0;i<7;i++){const c=new THREE.Mesh(new THREE.CircleGeometry(1,28),m);c.rotation.x=-Math.PI/2;c.receiveShadow=true;g.add(c)}g.visible=false;scene.add(g);return g})());
  const P=[[0,175,95],[-235,40,80],[232,-20,70],[-120,160,60],[140,170,55],[-60,-160,60],[90,-150,50]];G.children.forEach((c,i)=>{const q=P[i];c.position.set(x+q[0],.6+i*.05,q[1]);c.userData.R=q[2]*(.9+Math.random()*.3);c.scale.setScalar(.01)});G.visible=true;PROPS.bpT=0}
