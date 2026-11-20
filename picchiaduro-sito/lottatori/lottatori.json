@@ -242,6 +242,21 @@
     53.3
    ],
    "ritratto_zoom": 1.25
+  },
+  {
+   "id": "tano",
+   "nome": "Tano",
+   "cartella": "tano",
+   "tipo": "glb",
+   "accoppalo": "pray",
+   "normali": false,
+   "ritratto": "ritratto.jpg",
+   "figura": "figura.webp",
+   "ritratto_centro": [
+    45.3,
+    57.2
+   ],
+   "ritratto_zoom": 2.02
   }
  ]
 }

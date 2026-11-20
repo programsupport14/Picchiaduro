@@ -24,10 +24,11 @@ const SMAP={
  vetro:[{s:['vetro1','vetro2'],v:.7}],portiera:[{s:['portiera'],v:.6}],sforzo:[{s:['sforzo1','sforzo2'],v:.35}],ossa:[{s:['ossa1','ossa2'],v:.7}],
  stoffa:[{s:['stoffa1','stoffa2'],v:.55}],battito:[{s:['tonfo'],v:.6,r:[.5,.56]},{s:['tonfo'],v:.42,r:[.62,.68],d:.15}],lamiera:[{s:['lamiera'],v:.7},{s:['metallo2'],v:.4,r:[.6,.7]}],
  sgommata:[{s:['raschio'],v:.7,r:[.5,.62]},{s:['ariona1','ariona2'],v:.4,r:[.6,.7]}],sfrigolio:[{s:['fuoco'],v:.5,r:[1.5,1.9]},{s:['crepitio'],v:.4,r:[1.1,1.4]}],manette:[{s:['metallo1'],v:.5,r:[1.7,2]},{s:['ui_no'],v:.35,r:[1.5,1.7]}],tappo:[{s:['ui_no'],v:.6,r:[.55,.65]}],
+ campana:[{s:['campana'],v:.9}],coro:[{s:['coro'],v:.55}],
  fischio(){ton(.95,2100,240,.24,'sine');nz(.95,900,.8,.13)},crepita:null};
 const _sfxSynth=sfx;
 sfx=function(k){if(!ac||ac.state!=='running')return;const now=ac.currentTime;if(AUD.last[k]!==undefined&&now-AUD.last[k]<.03)return;AUD.last[k]=now;
  const m=SMAP[k];if(typeof m==='function'){try{m()}catch(e){}return}
  if(AUD.ready&&m){for(const L of m){if(L.p&&Math.random()>L.p)continue;const n=L.s[(Math.random()*L.s.length)|0],r=L.r?L.r[0]+Math.random()*(L.r[1]-L.r[0]):1;audPlay(n,L.v,r,L.d||0)}return}
- if(k==='drone')return;const fb={kick:'hit',kickH:'hitH',swingH:'swing',esplosione:'ko',schianto:'ko',titolo:'hitH',titolo2:'thud',titolo3:'thud',taglio:'squish',ossa:'rip',vs:'hitH',sparo:'hitH',tuono:'ko',rombo:'thud',scossa:'crepita',click:'block',legno:'thud',lama:'block',portiera:'thud',vetro:'block',passo:'thud',lettera:'block',sgommata:'thud',sfrigolio:'crepita',manette:'block',tappo:'block'}[k]||k;_sfxSynth(fb)};
+ if(k==='drone')return;const fb={campana:'block',coro:'drone',kick:'hit',kickH:'hitH',swingH:'swing',esplosione:'ko',schianto:'ko',titolo:'hitH',titolo2:'thud',titolo3:'thud',taglio:'squish',ossa:'rip',vs:'hitH',sparo:'hitH',tuono:'ko',rombo:'thud',scossa:'crepita',click:'block',legno:'thud',lama:'block',portiera:'thud',vetro:'block',passo:'thud',lettera:'block',sgommata:'thud',sfrigolio:'crepita',manette:'block',tappo:'block'}[k]||k;_sfxSynth(fb)};
 const _wakeOld=wake;wake=function(){_wakeOld();audInit();if(!window.__test)audLoad()};
