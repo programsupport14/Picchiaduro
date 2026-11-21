@@ -212,7 +212,8 @@ function footIK(c,R,M,A,FIN,dt,on,plant){const B=R.B;if(!M.J||!B.tR||!B.sR||!B.f
   const x=(a*a-b*b+d*d)/(2*d),h=Math.sqrt(Math.max(0,a*a-x*x));ikN.copy(ikH).addScaledVector(ikD,x).addScaledVector(ikP,h);ikT.copy(ikH).addScaledVector(ikD,d);
   ikA.copy(ikK).sub(ikH).normalize();ikB.copy(ikN).sub(ikH).normalize();ikQ.setFromUnitVectors(ikA,ikB).premultiply(ikGi).multiply(ikG);FIN['t'+sd].premultiply(ikQ);
   ikA.copy(ikF).sub(ikK).normalize();ikB.copy(ikT).sub(ikN).normalize();ikQ.setFromUnitVectors(ikA,ikB).premultiply(ikGi).multiply(ikG);FIN['s'+sd].premultiply(ikQ);any=true}
-  if(plant){const w=A.plw=(A.plw||0)+(1-(A.plw||0))*.2;for(const sd of'RL'){const q=FIN['f'+sd];kaV.set(0,0,1).applyQuaternion(q);const yw=Math.atan2(kaV.x,kaV.z);kaF.setFromAxisAngle(_Y,yw);q.slerp(kaF,w)}any=true}else A.plw=0;
+  if(plant){const w=A.plw=(A.plw||0)+(1-(A.plw||0))*.2,ld=c.f>0?'L':'R';// piedi piatti e orientati da guardia: quello avanti verso l'avversario, quello dietro un po' in fuori (non a papera)
+  for(const sd of'RL'){const q=FIN['f'+sd],yw=(sd==='L'?1:-1)*(sd===ld?.08:.42);kaF.setFromAxisAngle(_Y,yw);q.slerp(kaF,w)}any=true}else A.plw=0;
  if(any)applyPose(R,FIN)}
 // due ossa (coscia, stinco): porta la caviglia sul punto p (mondo), il ginocchio resta dalla parte dove già piega
 // ginocchia verso la punta del piede: la clip di guardia le porta in dentro (gamba "a X"). Si ruota la coscia attorno all'asse anca-caviglia:

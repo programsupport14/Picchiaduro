@@ -12,10 +12,10 @@
    "figura": "figura.webp",
    "costumi": [
     {
-     "id": "cappotto",
-     "nome": "Cappotto",
-     "file": "costume-cappotto.glb",
-     "figura": "figura-cappotto.webp"
+     "id": "chrollo",
+     "nome": "Chrollo",
+     "file": "costume-chrollo.glb",
+     "figura": "figura-chrollo.webp"
     }
    ],
    "ritratto_centro": [
@@ -262,10 +262,10 @@
    "figura": "figura.webp",
    "costumi": [
     {
-     "id": "cappotto",
-     "nome": "Cappotto",
-     "file": "costume-cappotto.glb",
-     "figura": "figura-cappotto.webp"
+     "id": "chrollo",
+     "nome": "Chrollo",
+     "file": "costume-chrollo.glb",
+     "figura": "figura-chrollo.webp"
     }
    ],
    "ritratto_centro": [
