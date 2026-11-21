@@ -5,10 +5,14 @@ const $=id=>document.getElementById(id);
 const fdir=e=>(window.__lottDir||'lottatori/')+e.cartella+'/';
 function buildSel(){$('selgo').onclick=()=>selConfirm();$('selback').onclick=()=>selBack();$('selcos').onclick=()=>selCos(Math.min(1,SEL.step),1)}
 // ---------- costumi (segreti): si sbloccano nella schermata iniziale con Quadrato + Triangolo insieme (tastiera: J + I insieme, oppure K due volte; telefono: 5 tocchi sul logo) ----------
-let COSUN=false;try{COSUN=localStorage.getItem('cafCostumi')==='1'}catch(e){}
+// ogni costume ha la sua combinazione (voce "sblocco" nel roster, se manca è quella di Chrollo); gli sblocchi restano salvati nel browser
+const SBL={};try{SBL.chrollo=localStorage.getItem('cafCostumi')==='1';SBL.quadrato=localStorage.getItem('cafSbl_quadrato')==='1'}catch(e){}
+let COSUN=!!SBL.chrollo;
 function toast(t,ms=3200){const d=$('toast');d.textContent=t;d.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>d.hidden=true,ms)}
-function unlockCostumes(){if(COSUN)return;COSUN=true;try{localStorage.setItem('cafCostumi','1')}catch(e){}sfx('vs');toast('Costumi sbloccati! Scegli il costume nella scelta del lottatore (L1/R1, Q/E o il tasto Costume)')}
-const cosList=e=>[null].concat(COSUN&&e&&e.costumi?e.costumi:[]);
+function unlockCostumes(k='chrollo'){if(SBL[k])return;const L=(typeof ROSTER!=='undefined'?ROSTER:[]).flatMap(e=>e&&e.costumi?e.costumi.filter(c=>(c.sblocco||'chrollo')===k).map(c=>[e,c]):[]);if(!L.length&&k!=='chrollo')return;
+ SBL[k]=true;if(k==='chrollo')COSUN=true;try{localStorage.setItem(k==='chrollo'?'cafCostumi':'cafSbl_'+k,'1')}catch(e){}sfx('vs');
+ toast(L.length?'Costume sbloccato: '+L.map(([e,c])=>c.nome+' ('+e.nome+')').filter((x,i,a)=>a.indexOf(x)===i).join(', ')+'! Si sceglie nella scelta del lottatore (L1/R1, Q/E o il tasto Costume)':'Costumi sbloccati!')}
+const cosList=e=>[null].concat(e&&e.costumi?e.costumi.filter(c=>SBL[c.sblocco||'chrollo']):[]);
 function selCos(pl,d){if(SEL.step>1)return;const e=ROSTER[SEL.cur[pl]],L=cosList(e);if(L.length<2)return;SEL.cos[pl]=(SEL.cos[pl]+d+L.length)%L.length;sfx('ui_muovi');drawSel()}
 function porImg(e,box){if(e.ritratto){const img=new Image();img.alt='';img.loading='lazy';img.src=fdir(e)+e.ritratto;const c=e.ritratto_centro,z=e.ritratto_zoom||1;if(c){img.style.objectPosition=c[0]+'% '+c[1]+'%';img.style.transformOrigin=c[0]+'% '+c[1]+'%'}img.style.transform='skewX(7deg) scale('+(1.18*z)+')';box.append(img)}else box.textContent=(e.nome||'?')[0]}
 function fillSel(){COLS=Math.max(5,Math.ceil(ROSTER.length/4));ROWS=Math.max(3,Math.ceil(ROSTER.length/COLS));const g=$('grid');g.style.gridTemplateColumns=`repeat(${COLS},1fr)`;g.textContent='';for(let i=0;i<COLS*ROWS;i++){const e=ROSTER[i],b=document.createElement('button'),ok=e&&e.id&&!e.bloccato;b.className='card'+(ok?'':' lock');b.dataset.i=i;

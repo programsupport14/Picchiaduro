@@ -23,7 +23,7 @@ async function homeFat(k){if(net||loading)return;closeHome();try{await watchFat(
 function openHome(panel){if(net)return;if(SEL.open)closeSel();HOME.open=true;HOME.still=null;HOME.panel=panel||'main';HOME.cur=0;HOME.pad={x:1,c:1,s:1,dir:1};$('home').hidden=false;homeFigs();homeDraw();if(typeof g!=='undefined'){g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,g.canvas.width,g.canvas.height);gh.setTransform(1,0,0,1,0,0);gh.clearRect(0,0,gh.canvas.width,gh.canvas.height);HUDSIG=''}$('wrap').scrollIntoView({block:'nearest'})}
 function closeHome(){HOME.open=false;$('home').hidden=true;if(typeof titClear==='function'&&TIT.scene)titClear()}
 function homeFigs(){const box=$('hfig');if(box.dataset.ok||typeof ROSTER==='undefined'||!ROSTER.length)return;box.dataset.ok=1;const L=ROSTER.filter(e=>e&&e.id&&!e.bloccato&&e.figura),n=L.length,pos=[[-2,.86,3],[101,.86,3],[9,.74,2],[90,.74,2],[19,.64,1],[80,.64,1],[27,.56,0],[72,.56,0]];
- L.slice(0,8).forEach((e,i)=>{const im=new Image(),p=pos[i];im.alt='';im.src=fdir(e)+e.figura;im.style.left=p[0]+'%';im.style.height=(p[1]*100)+'%';im.style.zIndex=p[2];im.style.animationDelay=(.08*i)+'s';if(p[0]>50)im.classList.add('r');im.dataset.d=p[2];box.append(im)})}
+ L.slice(0,8).forEach((e,i)=>{const im=new Image(),p=pos[i];im.alt='';im.src=fdir(e)+e.figura;im.style.left=p[0]+'%';im.style.height=(p[1]*100)+'%';im.style.zIndex=p[2];im.style.animationDelay=(.08*i)+'s';if(p[0]>50)im.classList.add('r');im.dataset.d=p[2];if(e.id==='giacca'){im.classList.add('tocca');let tp=[];im.addEventListener('pointerdown',()=>{const t=performance.now();tp=tp.filter(x=>t-x<2500);tp.push(t);if(tp.length>=5){tp=[];unlockCostumes('quadrato')}})}box.append(im)})}
 // ---------- sfondo e logo 3D (disegnati nel canvas WebGL dietro al menu) ----------
 function homeInit(){if(HOME.sc)return;HOME.sc=new THREE.Scene();HOME.cam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
  HOME.bg=new THREE.ShaderMaterial({uniforms:{uT:{value:0}},depthTest:false,depthWrite:false,toneMapped:false,vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:`uniform float uT;varying vec2 vUv;
@@ -50,6 +50,8 @@ function homePoll(){if(!HOME.open&&!HOME.cfg)return false;const ps=pads();padSta
  if(HOME.cfg){if(HOME.wait&&HOME.wait.pad){if(!HOME.wait.arm){if(!q.buttons.some(x=>x.pressed))HOME.wait.arm=1}else{const i=q.buttons.findIndex(x=>x.pressed);if(i>=0){cfgSetPad(HOME.wait.a,i)}}}else{const c=b(1);if(c&&!o.c)closeCfg();o.c=c}return true}
  const ay=q.axes[1]||0,n={u:b(12)||ay<-.5,d:b(13)||ay>.5,x:b(0),c:b(1),s:b(9)},dir=n.u?-1:n.d?1:0;
  if(HOME.open&&ps.some(p=>p.buttons[2]&&p.buttons[2].pressed&&p.buttons[3]&&p.buttons[3].pressed))unlockCostumes();// Quadrato + Triangolo: costumi
+ // Quadrato tre volte di fila (entro 1,5 secondi): secondo costume segreto
+ if(HOME.open){const sq=ps.some(p=>p.buttons[2]&&p.buttons[2].pressed),t=performance.now();if(sq&&!HOME.sq){HOME.sqT=(HOME.sqT||[]).filter(x=>t-x<1500);HOME.sqT.push(t);if(HOME.sqT.length>=3){HOME.sqT=[];unlockCostumes('quadrato')}}HOME.sq=sq}
  if(dir){if(!o.dir||--HOME.rep<=0){homeMove(dir);HOME.rep=o.dir?7:18}}if((n.x&&!o.x)||(n.s&&!o.s))homeOk();if(n.c&&!o.c)homeBack();HOME.pad=Object.assign(n,{dir:!!dir});return true}
 // ---------- pannello Comandi ----------
 function openCfg(){if(net)return;HOME.cfg=true;HOME.wait=null;$('cfg').hidden=false;cfgDraw();$('wrap').scrollIntoView({block:'nearest'})}

@@ -556,10 +556,11 @@ let T1ST=0;
 async function ensureMatch(){if(!p1||!MATCH){const id=available()[0].id;await startMatch([id,id],selArena)}else closeSel()}
 // contatore attivabile con F2: fotogrammi al secondo, millisecondi per fotogramma (medio e peggiore), tempo di logica e di disegno, grandezza del canvas, chiamate e triangoli
 // costumi segreti dalla tastiera nella schermata iniziale: J + I insieme (Quadrato + Triangolo) oppure K due volte di fila; sul telefono 5 tocchi sul logo
-{const held=new Set();let kT=0,tap=[];let jT=-1e9;addEventListener('keydown',e=>{held.add(e.code);if(typeof HOME==='undefined')return;const t=performance.now(),home=HOME.open&&!HOME.cfg;if(e.code==='KeyJ'&&home)jT=t;
+{const held=new Set();let kT=0,tap=[];let jT=-1e9,lT=[];addEventListener('keydown',e=>{held.add(e.code);if(typeof HOME==='undefined')return;const t=performance.now(),home=HOME.open&&!HOME.cfg;if(e.code==='KeyJ'&&home)jT=t;
   // J conferma nel menu: se I è già premuto lo sblocco ha la precedenza; se I arriva subito dopo J (che ha già aperto la scelta) vale lo stesso
   if((home&&e.code==='KeyJ'&&held.has('KeyI'))||(e.code==='KeyI'&&held.has('KeyJ')&&t-jT<500)){e.preventDefault();e.stopImmediatePropagation();unlockCostumes();if(SEL.open)drawSel();return}
-  if(home&&e.code==='KeyK'&&!e.repeat){if(t-kT<450)unlockCostumes();kT=t}},true);addEventListener('keyup',e=>held.delete(e.code));
+  if(home&&e.code==='KeyK'&&!e.repeat){if(t-kT<450)unlockCostumes();kT=t}
+  if(home&&e.code==='KeyL'&&!e.repeat){lT=lT.filter(x=>t-x<1500);lT.push(t);if(lT.length>=3){lT=[];unlockCostumes('quadrato')}}},true);addEventListener('keyup',e=>held.delete(e.code));
  addEventListener('pointerdown',e=>{if(typeof HOME==='undefined'||!HOME.open||!e.target.closest||!e.target.closest('.hlogo'))return;const t=performance.now();tap=tap.filter(x=>t-x<2500);tap.push(t);if(tap.length>=5){tap=[];unlockCostumes()}})}
 let DBG=false;addEventListener('keydown',e=>{if(e.code==='F1'){e.preventDefault();DBG=!DBG;FXD=1}});
 function dbgDraw(){const R=(b,col)=>{g.fillStyle=`rgba(${col},.22)`;g.strokeStyle=`rgba(${col},.95)`;g.lineWidth=2;g.fillRect(b.x0,GROUND-b.y1,b.x1-b.x0,b.y1-b.y0);g.strokeRect(b.x0,GROUND-b.y1,b.x1-b.x0,b.y1-b.y0)},cols=['70,160,255','60,210,120','250,205,60'];
