@@ -22,7 +22,8 @@
      "nome": "Ultimate",
      "file": "costume-ultimate.glb",
      "figura": "figura-ultimate.webp",
-     "sblocco": "quadrato"
+     "sblocco": "quadrato",
+     "accoppalo": "ultimate"
     }
    ],
    "ritratto_centro": [
