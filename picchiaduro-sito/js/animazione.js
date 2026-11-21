@@ -3,6 +3,10 @@ const KA={kmax:18,toe:.3,bz:.09,by:.025,bt:.15,bs:.2};
 // animazione.js: strato visivo sopra la logica 2D. Sceglie per ogni lottatore tra motion capture (CMU), pose procedurali
 // e ragdoll, con dissolvenze, poi aggiunge le reazioni ai colpi. Non cambia la simulazione: l'online resta deterministico.
 let MOCAP=null;const AK=['hips','spine','neck','head','uR','lR','tR','sR','fR','uL','lL','tL','sL','fL'];
+// Chi guarda a sinistra fa la posa specchiata (destra↔sinistra): la guardia ha il piede sinistro avanti, e girando soltanto il modello
+// il lottatore di destra mostrava le gambe incrociate verso la telecamera. Specchiando la posa i due lottatori stanno in guardia allo stesso modo.
+const AKM=AK.map(k=>/[RL]$/.test(k)?k.slice(0,-1)+(k.endsWith('R')?'L':'R'):k),mirQ=AK.map(()=>new THREE.Quaternion());
+let MIR=false;function mirrorPose(out,root){AK.forEach((k,i)=>mirQ[i].copy(out[AKM[i]]));AK.forEach((k,i)=>{const q=mirQ[i];out[k].set(q.x,-q.y,-q.z,q.w)});if(root)root.x=-root.x}
 async function loadMocap(){try{const d=await getJSON('mocap/clip.json');for(const k in d.clip){const c=d.clip[k];for(const j in c.q)c.q[j]=Float32Array.from(c.q[j]);c.root=Float32Array.from(c.root)}MOCAP=d.clip;try{const P=newPose(),r=new THREE.Vector3(),v=new THREE.Vector3(),w=new THREE.Vector3();for(const k of['jab','cross','special']){const mc=MOVECLIP[k],cl=mc&&MOCAP[mc.c];if(!cl||!mc)continue;sampleClip(cl,cl.peak||0,P,r);const e=s=>v.copy(DIRS['u'+s]).applyQuaternion(P['u'+s]).z+w.copy(DIRS['l'+s]).applyQuaternion(P['l'+s]).z;mc.side=e('R')>e('L')?1:-1}}catch(e){}}catch(e){console.warn('motion capture non caricato',e);MOCAP=null}}
 const anQ1=new THREE.Quaternion(),anQ2=new THREE.Quaternion(),anV=new THREE.Vector3(),anV2=new THREE.Vector3(),anM=new THREE.Matrix4();
 const newPose=()=>Object.fromEntries(AK.map(k=>[k,new THREE.Quaternion()]));
@@ -58,7 +62,7 @@ function ragPose(G,out,hip){const P=nm=>new THREE.Vector3(G.p[RAGI[nm]*3],G.p[RA
  for(const s of'RL'){aimK('u'+s,'S'+s,'E'+s,TQ,iT);aimK('l'+s,'E'+s,'W'+s,TQ,iT);aimK('t'+s,'T'+s,'K'+s,HQ,iH);aimK('s'+s,'K'+s,'A'+s,HQ,iH);out['f'+s].copy(out['s'+s]).multiply(anQ1.setFromUnitVectors(DIRS['s'+s],new THREE.Vector3(0,-1,0)))}
  hip.copy(H)}
 // ---------- strato principale ----------
-function guardArms(T,ph){sampleClip(MOCAP.guard,ph,GRD,anV);for(const k of['uR','lR','uL','lL'])T[k].copy(GRD[k]).premultiply(anQ1.copy(T.spine).multiply(anQ2.copy(GRD.spine).invert()))}
+function guardArms(T,ph){sampleClip(MOCAP.guard,ph,GRD,anV);if(MIR)mirrorPose(GRD,null);for(const k of['uR','lR','uL','lL'])T[k].copy(GRD[k]).premultiply(anQ1.copy(T.spine).multiply(anQ2.copy(GRD.spine).invert()))}
 const qLog=(q,o)=>{let w=q.w,x=q.x,y=q.y,z=q.z;if(w<0){w=-w;x=-x;y=-y;z=-z}const s=Math.sqrt(x*x+y*y+z*z);if(s<1e-7)return o.set(0,0,0);const a=2*Math.atan2(s,w)/s;return o.set(x*a,y*a,z*a)};
 const qExp=(v,o)=>{const a=v.length();if(a<1e-7)return o.set(0,0,0,1);const s=Math.sin(a/2)/a;return o.set(v.x*s,v.y*s,v.z*s,Math.cos(a/2))};
 const WG={b:.82,f:.6},TGW=newPose(),gHip=new THREE.Vector3(),TGP=newPose(),pHip=new THREE.Vector3(),inQ=new THREE.Quaternion(),inV=new THREE.Vector3(),inV2=new THREE.Vector3();
@@ -69,6 +73,7 @@ function animLayer(c,R,M,PROC,px,py,pz){
  // negli Accoppalo una mossa può far recitare al lottatore una clip vera (c.fclip={c:nome,f:fotogramma,fp:precedente}): telefonata, camminata, parata
  // a fine mossa finale il vincitore balla (clip vera di Mixamo, ciclica)
  const fcl=c.fclip||(c.dance&&MOCAP&&MOCAP[c.dance.c]?(()=>{const n=MOCAP[c.dance.c].n-1,u=(tick-c.dance.t0)*.42;return{c:c.dance.c,f:u%n,fp:Math.max(0,u-.42)%n,b:14}})():null);
+ MIR=!fcl&&c.f<0&&!c.fpose&&!c.gone&&state!=='fatality';
  if(MOCAP&&fcl&&MOCAP[fcl.c]&&!c.gone){clip=MOCAP[fcl.c];f=Math.max(0,Math.min(clip.n-1,fcl.f));fp=Math.max(0,Math.min(clip.n-1,fcl.fp==null?f-1:fcl.fp));src='fc_'+fcl.c;A.blend=fcl.b||9}
  else if(MOCAP&&!(state==='fatality'||c.fpose||c.gone)){
   // K.O. di fine round: crollo vero in motion capture (ginocchia, poi a faccia in giù); la spazzata invece fa cadere di schiena col ragdoll
@@ -80,20 +85,21 @@ function animLayer(c,R,M,PROC,px,py,pz){
    else{if(A.air){A.land=tick;A.air=0}if(!(c.block&&!c.m))A.bk=0;
     if(c.block&&!c.m&&MOCAP.block){clip=MOCAP.block;if(!A.bk)A.bk=tick;const H=clip.hold||clip.n-1;f=Math.min(H,(tick-A.bk)*1.5);fp=Math.max(0,Math.min(H,(tick-1-A.bk)*1.5));src='block';A.blend=5}
     else if(tick-A.land<26&&!c.m&&!c.block&&!c.crouch){clip=MOCAP.land;f=(tick-A.land)/2;fp=f-.5;src='land'+A.land;A.blend=6}
-    else if(Math.abs(c.vx)>.5&&(!c.m||c.m==='hurt')){const fw=Math.sign(c.vx)*c.f>0;clip=fw?MOCAP.walkF:MOCAP.walkB;const rate=Math.min(c.run||c.m==='hurt'?2.6:1.75,Math.max(.7,Math.abs(c.vx)*60/SCL/Math.abs(clip.vel)));A.wph+=dt*rate/2;f=A.wph;fp=f-rate/2;src=fw?'walkF':'walkB';A.blend=10}
+    // passi solo se il giocatore cammina davvero (levetta/frecce): spinto da un colpo o dal contraccolpo resta in guardia e scivola, niente passo a metà con il ginocchio alzato
+    else if(Math.abs(c.vx)>.5&&!c.m&&c.inp&&(c.inp.left||c.inp.right)){const fw=Math.sign(c.vx)*c.f>0;clip=fw?MOCAP.walkF:MOCAP.walkB;const rate=Math.min(c.run?2.6:1.75,Math.max(.7,Math.abs(c.vx)*60/SCL/Math.abs(clip.vel)));A.wph+=dt*rate/2;f=A.wph;fp=f-rate/2;src=fw?'walkF':'walkB';A.blend=10}
     else{clip=MOCAP.guard;f=A.gph;fp=f;src='guard';A.blend=11}}}}
  if(src!=='rag'&&A.rag&&c.m!=='ko')A.rag=null;
  // obiettivo
  if(src==='rag'){const G=A.rag;R.G.updateMatrixWorld(true);if(!G.W){G.W=R.G.localToWorld(new THREE.Vector3());G.L=new THREE.Vector3()}else{const L=R.G.worldToLocal(G.W.clone()),dx=L.x-G.L.x,dz=L.z-G.L.z;// il corpo resta dov'è nel mondo anche se il punto logico scivola
    if(Math.abs(dx)+Math.abs(dz)>1e-7){for(let i=0;i<G.p.length;i+=3){G.p[i]+=dx;G.o[i]+=dx;G.p[i+2]+=dz;G.o[i+2]+=dz}G.still=0}G.L.copy(L)}
   for(let s=0;s<dt&&G.still<30;s++)ragStep(G);if(G.thud){if(typeof sfx==='function')sfx(G.hit>1?'legno':'thud');if(typeof shake!=='undefined'&&G.hit<2)shake=Math.max(shake,4*G.thud);G.thud=0}ragPose(G,TGT,tHip)}
- else if(clip){sampleClip(clip,f,TGT,tHip);tHip.set(tHip.x*M.legR,-1+tHip.y*M.legR,tHip.z*M.legR);
+ else if(clip){sampleClip(clip,f,TGT,tHip);if(MIR)mirrorPose(TGT,tHip);tHip.set(tHip.x*M.legR,-1+tHip.y*M.legR,tHip.z*M.legR);
   // camminata in guardia: le gambe restano larghe e piegate come nella guardia (passi corti), l'anca resta bassa; la clip dà solo il ritmo del passo
-  if(clip===MOCAP.walkB||clip===MOCAP.walkF){const k=clip===MOCAP.walkB?WG.b:WG.f;sampleClip(MOCAP.guard,A.gph,TGW,gHip);gHip.set(gHip.x*M.legR,-1+gHip.y*M.legR,gHip.z*M.legR);for(const j of['hips','tR','sR','fR','tL','sL','fL'])TGT[j].slerp(TGW[j],k);tHip.lerp(gHip,k)}
+  if(clip===MOCAP.walkB||clip===MOCAP.walkF){const k=clip===MOCAP.walkB?WG.b:WG.f;sampleClip(MOCAP.guard,A.gph,TGW,gHip);if(MIR)mirrorPose(TGW,gHip);gHip.set(gHip.x*M.legR,-1+gHip.y*M.legR,gHip.z*M.legR);for(const j of['hips','tR','sR','fR','tL','sL','fL'])TGT[j].slerp(TGW[j],k);tHip.lerp(gHip,k)}
   if(clip===MOCAP.jump||clip===MOCAP.land)guardArms(TGT,A.gph)}
  else{for(const k of AK)TGT[k].copy(PROC[k]);tHip.set(px,py,pz)}
  // transizione inerziale quando cambia la sorgente: differenza iniziale e velocità relativa smorzate da una molla critica
- if(src!==A.src){if(A.src){let tp=TGT,hp=tHip;if(clip&&fp!=null){sampleClip(clip,fp,TGP,pHip);pHip.set(pHip.x*M.legR,-1+pHip.y*M.legR,pHip.z*M.legR);if(clip===MOCAP.jump||clip===MOCAP.land)guardArms(TGP,A.gph-.5);tp=TGP;hp=pHip}
+ if(src!==A.src){if(A.src){let tp=TGT,hp=tHip;if(clip&&fp!=null){sampleClip(clip,fp,TGP,pHip);if(MIR)mirrorPose(TGP,pHip);pHip.set(pHip.x*M.legR,-1+pHip.y*M.legR,pHip.z*M.legR);if(clip===MOCAP.jump||clip===MOCAP.land)guardArms(TGP,A.gph-.5);tp=TGP;hp=pHip}
    for(const k of AK){qLog(inQ.copy(A.out[k]).multiply(anQ1.copy(TGT[k]).invert()),A.ox[k]);qLog(inQ.copy(A.out[k]).multiply(anQ1.copy(A.prev[k]).invert()),inV);qLog(inQ.copy(TGT[k]).multiply(anQ1.copy(tp[k]).invert()),inV2);A.ov[k].copy(inV).sub(inV2)}
    A.hx.copy(A.hip).sub(tHip);A.hv.copy(A.hip).sub(A.prevHip).sub(inV.copy(tHip).sub(hp));if(src.startsWith('land'))A.hv.y-=.03}
   A.src=src;if(src==='rag')A.blend=4}
@@ -116,7 +122,7 @@ function animLayer(c,R,M,PROC,px,py,pz){
   if(A.thr>.001){const w=A.thr*A.gw;RX.setFromEuler(qe.set(-.13*w,0,0));for(const k of['spine','neck','head','uR','lR','uL','lL'])FIN[k].premultiply(RX);RX.setFromEuler(qe.set(.1*w,0,0));FIN.neck.premultiply(RX);FIN.head.premultiply(RX);fHip.z-=.03*w;for(const sd of'RL')FIN['l'+sd].premultiply(RX.setFromEuler(qe.set(-.16*w,0,0)))}
   if(Math.abs(A.lk)>.002){RX.setFromEuler(qe.set(A.lk*.55,0,0));FIN.neck.premultiply(RX);FIN.head.premultiply(RX);FIN.head.premultiply(RX)}}}
  // 2) meccanica del pugno: il bacino e il tronco ruotano dietro il braccio che colpisce, il peso va avanti; molla poco smorzata = follow-through
- {let th=A.pw*((eR*(lead==='R'?.34:.6))-(eL*(lead==='L'?.34:.6)));const mc=mv&&MOVECLIP[mv];if(punch&&mc.hit&&mc.side&&c.t<mc.hit*.55)th-=mc.side*.2*Math.sin(Math.PI*c.t/(mc.hit*.55));
+ {let th=A.pw*((eR*(lead==='R'?.34:.6))-(eL*(lead==='L'?.34:.6)));const mc=mv&&MOVECLIP[mv];if(punch&&mc.hit&&mc.side&&c.t<mc.hit*.55)th-=mc.side*(MIR?-1:1)*.2*Math.sin(Math.PI*c.t/(mc.hit*.55));
   th+=A.kw*(kR-kL)*.3;if(A.tw==null){A.tw=0;A.twv=0}for(let s=0;s<dt;s++){A.twv+=(th-A.tw)*.22-A.twv*.5;A.tw+=A.twv}const t=A.tw,m=A.pw*Math.max(eR,eL),kk=A.kw*Math.max(kR,kL);
   if(Math.abs(t)>.002||m>.002||kk>.002){RX.setFromEuler(qe.set(0,t*.45,0));FIN.hips.premultiply(RX);RX.setFromEuler(qe.set(.15*m-.3*kk,t,-t*.12));FIN.spine.premultiply(RX);
    RX.setFromEuler(qe.set(.05*m-.12*kk,t*.25,0));FIN.neck.premultiply(RX);FIN.head.premultiply(RX);
