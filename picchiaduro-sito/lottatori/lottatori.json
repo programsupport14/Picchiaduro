@@ -10,6 +10,14 @@
    "accoppalo": "lightning",
    "altezza": 1.0278,
    "figura": "figura.webp",
+   "costumi": [
+    {
+     "id": "cappotto",
+     "nome": "Cappotto",
+     "file": "costume-cappotto.glb",
+     "figura": "figura-cappotto.webp"
+    }
+   ],
    "ritratto_centro": [
     49.4,
     43.2
@@ -252,6 +260,14 @@
    "normali": false,
    "ritratto": "ritratto.jpg",
    "figura": "figura.webp",
+   "costumi": [
+    {
+     "id": "cappotto",
+     "nome": "Cappotto",
+     "file": "costume-cappotto.glb",
+     "figura": "figura-cappotto.webp"
+    }
+   ],
    "ritratto_centro": [
     45.3,
     57.2

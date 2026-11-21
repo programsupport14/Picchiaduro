@@ -9,8 +9,11 @@ const getJSON=u=>fetch(u).then(r=>{if(!r.ok)throw new Error('Non trovo '+u+' ('+
 async function loadRoster(){const m=window.__roster||await getJSON('lottatori/lottatori.json');ROSTER=m.lottatori;return ROSTER}
 const rosterEntry=id=>ROSTER.find(e=>e&&e.id===id);
 const available=()=>ROSTER.filter(e=>e&&e.id&&!e.bloccato);
-async function loadModel(id,prog){if(MODELS[id])return MODELS[id];const e=rosterEntry(id);if(!e)throw new Error('Lottatore sconosciuto: '+id);const dir=(window.__lottDir||'lottatori/')+e.cartella+'/';
- const M=e.tipo==='glb'?await loadGLB(e,dir,prog):await loadLegacy(e,dir,prog);M.id=id;M.e=e;MODELS[id]=M;return M}
+// costumi: un lottatore con costume è un altro modello (stesso scheletro, il costume già cucito sul corpo da deps/costume.mjs), in cache come "id@costume"
+const costumeOf=(e,c)=>c&&e&&e.costumi?e.costumi.find(x=>x.id===c):null;
+async function loadModel(id,prog,cos){const e=rosterEntry(id);if(!e)throw new Error('Lottatore sconosciuto: '+id);const C=costumeOf(e,cos),key=C?id+'@'+C.id:id;if(MODELS[key])return MODELS[key];const dir=(window.__lottDir||'lottatori/')+e.cartella+'/';
+ const e2=C?Object.assign({},e,{file:C.file,js:C.js,peso:C.peso}):e;
+ const M=e.tipo==='glb'?await loadGLB(e2,dir,prog):await loadLegacy(e,dir,prog);M.id=id;M.key=key;M.e=e;MODELS[key]=M;return M}
 
 // ---------- materiale comune: tinta, tagli, pezzi, parti nascoste ----------
 // aRP = posizione a riposo nello spazio del modello (piedi a y=-1, centro in x=0); aPart = 0 busto, 1 braccio destro, 2 sinistro, 3 gamba destra, 4 sinistra, 5 testa.
@@ -94,7 +97,7 @@ async function loadGLB(e,dir,prog){const gl=e.js?await glbFromJs(e,dir,prog):awa
  // mani: lunghezza del pugno oltre il polso e colore (pelle o guanto), per impugnare bene gli oggetti negli Accoppalo
  const handB=bones.map(b=>{const A=anc(b);return A.includes(map.wR)?1:A.includes(map.wL)?2:0}),HW={R:wp(map.wR),L:wp(map.wL)},HF={R:wp(map.wR).sub(wp(map.lR)).normalize(),L:wp(map.wL).sub(wp(map.lL)).normalize()},HL={R:0,L:0},HUV={R:[],L:[]};
  // modelli con pochi triangoli (o "liscia":true nel roster): normali ricalcolate unendo i vertici per posizione, altrimenti sul viso si vedono le facce e le cuciture delle UV come righe
- const tris=meshes.reduce((n,m)=>n+(m.geometry.index?m.geometry.index.count:m.geometry.attributes.position.count)/3,0);if(e.liscia!==false&&(e.liscia||tris<40000))for(const m of meshes)smoothNormals(m.geometry);
+ const triOf=m=>(m.geometry.index?m.geometry.index.count:m.geometry.attributes.position.count)/3,tris=meshes.reduce((n,m)=>n+triOf(m),0);if(e.liscia!==false)for(const m of meshes)if(e.liscia||(m.geometry.userData.corpo!==false&&(m.material&&m.material.name==='costume'?false:(e.file&&e.file!=='modello.glb'?triOf(m)<40000:tris<40000))))smoothNormals(m.geometry);
  const faceFlat=e.normali===false;if(e.normali==='no')for(const m of meshes)for(const mt of(Array.isArray(m.material)?m.material:[m.material]))if(mt)mt.normalMap=null;   // normal map difettosa (righe sul viso): non usarla
  const cross=[],head=[];meshes.forEach((m,mi)=>{const g=m.geometry,a=P0[mi],n=a.length/3,rp=new Float32Array(n*3),pt=new Float32Array(n),si=g.attributes.skinIndex,sw=g.attributes.skinWeight;
   for(let i=0;i<n;i++){rp[i*3]=a[i*3]*s+off.x;rp[i*3+1]=a[i*3+1]*s+off.y;rp[i*3+2]=a[i*3+2]*s+off.z;let bw=-1,bj=0;for(let k=0;k<4;k++){const w=sw.getComponent(i,k);if(w>bw){bw=w;bj=si.getComponent(i,k)}}{const bx=bi.get(m.skeleton.bones[bj]);pt[i]=partB[bx]??0;const hb=handB[bx];if(hb){const sd=hb===1?'R':'L',w=HW[sd],f=HF[sd],pr=(rp[i*3]-w.x)*f.x+(rp[i*3+1]-w.y)*f.y+(rp[i*3+2]-w.z)*f.z;if(pr>HL[sd])HL[sd]=pr;if(g.attributes.uv&&mi===main&&pr>.02&&HUV[sd].length<600)HUV[sd].push(g.attributes.uv.getX(i),g.attributes.uv.getY(i))}}if(pt[i]===5)head.push(rp[i*3],rp[i*3+1],rp[i*3+2])}

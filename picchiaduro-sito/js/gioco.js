@@ -536,9 +536,11 @@ function playMusic(a){const A=ARENE.find(x=>x.id===a),u=A&&A.musica;if(music&&mu
 const okId=id=>{const e=rosterEntry(id);return e&&!e.bloccato?id:available()[0].id};
 const myFighter=()=>okId(SEL.pick[0]||(MATCH&&MATCH.ids[0])||available()[0].id);
 function fname(i){const e=MATCH&&rosterEntry(MATCH.ids[i]),n=(e&&e.nome||'Lottatore '+(i+1)).toUpperCase();return i===1&&mode==='cpu'?n+' · CPU':i===1&&mode==='train'?n+' · CPU FERMA':n}
-async function prepareMatch(ids,arena,prog){const P=x=>prog&&prog(x),pr=[0,0],Ms=await Promise.all(ids.map((id,i)=>loadModel(id,x=>{pr[i]=x;P((pr[0]+pr[1])*.39)})));P(.8);await loadArena(arena);P(.84);
- clearFat();for(const r of RIG)parkRig(r);const same=ids[0]===ids[1];
- RIG=Ms.map((M,i)=>rigFor(M,ids[i],i===1&&same));freeRigs(RIG);
+// costume scelto da ogni giocatore (solo se sbloccati; online niente costumi)
+let COSTUME=[null,null];
+async function prepareMatch(ids,arena,prog){const P=x=>prog&&prog(x),pr=[0,0],cos=mode==='online'?[null,null]:(window.__cos||COSTUME),Ms=await Promise.all(ids.map((id,i)=>loadModel(id,x=>{pr[i]=x;P((pr[0]+pr[1])*.39)},cos[i])));P(.8);await loadArena(arena);P(.84);
+ clearFat();for(const r of RIG)parkRig(r);const same=Ms[0].key===Ms[1].key;
+ RIG=Ms.map((M,i)=>rigFor(M,M.key,i===1&&same));freeRigs(RIG);
  for(const R of RIG)if(R.model.kind==='legacy'&&!R.model.pruned){pruneFaces(R);R.model.pruned=true}
  buildWounds();if(ids.some(id=>{const e=rosterEntry(id);return e&&e.accoppalo==='police'}))await loadVolante();MATCH={ids:ids.slice(),arena};setArena(arena);P(.86);if(!WARMED[arena]){WARMED[arena]=1;NEEDWARM=1}if(NEEDWARM&&(!window.__test||window.__warm))await warmUp(P)}
 // Dietro la schermata VS: texture alla GPU e shader compilati (tagli, bruciature e scioglimento sono varianti dello stesso programma), così non scatta la prima volta che compaiono
@@ -553,6 +555,12 @@ async function startMatch(ids,arena,keepNet){loading=true;showLoad(0);console.ti
 let T1ST=0;
 async function ensureMatch(){if(!p1||!MATCH){const id=available()[0].id;await startMatch([id,id],selArena)}else closeSel()}
 // contatore attivabile con F2: fotogrammi al secondo, millisecondi per fotogramma (medio e peggiore), tempo di logica e di disegno, grandezza del canvas, chiamate e triangoli
+// costumi segreti dalla tastiera nella schermata iniziale: J + I insieme (Quadrato + Triangolo) oppure K due volte di fila; sul telefono 5 tocchi sul logo
+{const held=new Set();let kT=0,tap=[];let jT=-1e9;addEventListener('keydown',e=>{held.add(e.code);if(typeof HOME==='undefined')return;const t=performance.now(),home=HOME.open&&!HOME.cfg;if(e.code==='KeyJ'&&home)jT=t;
+  // J conferma nel menu: se I è già premuto lo sblocco ha la precedenza; se I arriva subito dopo J (che ha già aperto la scelta) vale lo stesso
+  if((home&&e.code==='KeyJ'&&held.has('KeyI'))||(e.code==='KeyI'&&held.has('KeyJ')&&t-jT<500)){e.preventDefault();e.stopImmediatePropagation();unlockCostumes();if(SEL.open)drawSel();return}
+  if(home&&e.code==='KeyK'&&!e.repeat){if(t-kT<450)unlockCostumes();kT=t}},true);addEventListener('keyup',e=>held.delete(e.code));
+ addEventListener('pointerdown',e=>{if(typeof HOME==='undefined'||!HOME.open||!e.target.closest||!e.target.closest('.hlogo'))return;const t=performance.now();tap=tap.filter(x=>t-x<2500);tap.push(t);if(tap.length>=5){tap=[];unlockCostumes()}})}
 let DBG=false;addEventListener('keydown',e=>{if(e.code==='F1'){e.preventDefault();DBG=!DBG;FXD=1}});
 function dbgDraw(){const R=(b,col)=>{g.fillStyle=`rgba(${col},.22)`;g.strokeStyle=`rgba(${col},.95)`;g.lineWidth=2;g.fillRect(b.x0,GROUND-b.y1,b.x1-b.x0,b.y1-b.y0);g.strokeRect(b.x0,GROUND-b.y1,b.x1-b.x0,b.y1-b.y0)},cols=['70,160,255','60,210,120','250,205,60'];
  for(const c of[p1,p2]){if(!c||c.gone)continue;if(!c.ko)for(const b of hurtBoxes(c))R(b,c.block?'170,170,190':cols[b.z]);const M=c.m&&MOVES[c.m];if(M&&(M.hit||M.hits))for(const H of M.hits||[M.hit])if(c.t>=H.from&&c.t<=H.to)R(hitBox(c,H),'255,45,45');

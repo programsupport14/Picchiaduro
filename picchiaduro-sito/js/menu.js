@@ -49,6 +49,7 @@ function menuKey(e){if(HOME.cfg){e.preventDefault();cfgKey(e);return true}if(!HO
 function homePoll(){if(!HOME.open&&!HOME.cfg)return false;const ps=pads();padStatus(ps);const q=HOME.cfg&&HOME.wait&&HOME.wait.pad?(ps.find(x=>x.buttons.some(y=>y.pressed))||ps[0]):padAny(ps);if(!q)return true;const b=n=>!!(q.buttons[n]&&q.buttons[n].pressed),o=HOME.pad;
  if(HOME.cfg){if(HOME.wait&&HOME.wait.pad){if(!HOME.wait.arm){if(!q.buttons.some(x=>x.pressed))HOME.wait.arm=1}else{const i=q.buttons.findIndex(x=>x.pressed);if(i>=0){cfgSetPad(HOME.wait.a,i)}}}else{const c=b(1);if(c&&!o.c)closeCfg();o.c=c}return true}
  const ay=q.axes[1]||0,n={u:b(12)||ay<-.5,d:b(13)||ay>.5,x:b(0),c:b(1),s:b(9)},dir=n.u?-1:n.d?1:0;
+ if(HOME.open&&ps.some(p=>p.buttons[2]&&p.buttons[2].pressed&&p.buttons[3]&&p.buttons[3].pressed))unlockCostumes();// Quadrato + Triangolo: costumi
  if(dir){if(!o.dir||--HOME.rep<=0){homeMove(dir);HOME.rep=o.dir?7:18}}if((n.x&&!o.x)||(n.s&&!o.s))homeOk();if(n.c&&!o.c)homeBack();HOME.pad=Object.assign(n,{dir:!!dir});return true}
 // ---------- pannello Comandi ----------
 function openCfg(){if(net)return;HOME.cfg=true;HOME.wait=null;$('cfg').hidden=false;cfgDraw();$('wrap').scrollIntoView({block:'nearest'})}
