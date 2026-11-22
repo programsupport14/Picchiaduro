@@ -45,7 +45,14 @@ function handPaint(G,col,skin){const U=G.userData,key=col+'/'+skin;if(U.key===ke
    let r=c.r*(1-.5*k),gg=c.g*(1-.66*k*sk-.5*k*(1-sk)),bb=c.b*(1-.68*k*sk-.5*k*(1-sk));const kn=U.kn?U.kn(P.getX(i),P.getY(i),P.getZ(i)):0;r*=1+.1*kn*sk;gg*=1-.12*kn*sk;bb*=1-.14*kn*sk;C.setXYZ(i,r,gg,bb)}C.needsUpdate=true}
  const bare=lum(b)>.25;for(const n of U.nails)n.visible=n.userData.sk?lum(b)>.25:lum(a)>.25&&bare}
 // pugno chiuso attorno a un manico di raggio Rh che passa lungo X (centro C): le dita lo avvolgono, il pollice si chiude sopra
-function buildHand(Rh){const G=new THREE.Group(),pz=-4.1,C=new THREE.Vector3(0,17.2,pz-Rh),rho=Rh+2.3,on=(a,x)=>[x,C.y+rho*Math.cos(a),C.z-rho*Math.sin(a)],PR=[[],[]],nails=[],nm=NAILM(),KN=[];
+// mano modellata (GLB fornito da Lorenzo, oggetti/mano.glb, già nel riferimento della mano: polso nell'origine, dita +Y, manico lungo X, presa verso -Z, pollice verso -X).
+// La cavità della presa ha centro MC0 (y,z) e raggio MR0; per un manico più grosso le dita si aprono attorno al manico (il palmo resta fermo).
+const MC0=[17.25,-8.4],MR0=4.35;
+function buildMeshHand(Rh){let src=null;OGG.mano.traverse(o=>{if(o.isMesh&&!src)src=o});const g=src.geometry.clone(),P=g.attributes.position,col=g.attributes.color,n=P.count,cr=new Float32Array(n),rg=new Float32Array(n).fill(1),d=Math.max(0,Rh-MR0);
+ for(let i=0;i<n;i++){cr[i]=col?Math.min(.6,col.getX(i)):0;if(d>0){const y=P.getY(i),z=P.getZ(i),dy=y-MC0[0],dz=z-MC0[1],r=Math.hypot(dy,dz)||1,w=Math.max(0,Math.min(1,1-(r-MR0)/9))*Math.max(0,Math.min(1,(y-4)/6));if(w>0){P.setY(i,y+w*d*dy/r);P.setZ(i,z+w*(d*dz/r-d))}}}
+ if(!col)g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3),3));g.computeVertexNormals();g.userData.cr=cr;g.userData.rg=rg;
+ const G=new THREE.Group(),m=new THREE.Mesh(g,handMat());m.castShadow=true;G.add(m);G.userData={C:new THREE.Vector3(0,MC0[0],MC0[1]-d),Rh,meshes:[m],nails:[],mesh:1};G.visible=false;scene.add(G);return G}
+function buildHand(Rh){if(typeof OGG!=='undefined'&&OGG.mano)return buildMeshHand(Rh);const G=new THREE.Group(),pz=-4.1,C=new THREE.Vector3(0,17.2,pz-Rh),rho=Rh+2.3,on=(a,x)=>[x,C.y+rho*Math.cos(a),C.z-rho*Math.sin(a)],PR=[[],[]],nails=[],nm=NAILM(),KN=[];
  PR[0].push({t:'b',c:[0,11.2,-.4],h:[6.4,7.6,1.5],rr:2.5},{t:'e',c:[0,1.2,0],r:[6.3,5.6,4.6]},{t:'e',c:[-5.6,7.6,-3],r:[3.8,6.6,3.2]},{t:'e',c:[5.6,8,-2.2],r:[3,6.4,2.6]});
  [[-6.2,1,2.15],[-2.1,1.06,2.3],[2.1,1,2.15],[5.9,.84,1.9]].forEach(([x,ls,r])=>{const p0=[x,20.3,.5],D=a=>{const q=on(a,x);return Math.hypot(q[1]-p0[1],q[2]-p0[2])};KN.push(p0);
   let am=-1.2,dm=1e9;for(let a=-1.2;a<1.6;a+=.02){const d=D(a);if(d<dm){dm=d;am=a}}let a1=am;while(a1<2.2&&D(a1)<9.6*ls)a1+=.02;

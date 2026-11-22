@@ -21,7 +21,7 @@ function gripHand(k,sd,B,phi,hint){const R=k.rig,M=R.model,gr=M.grip&&M.grip[sd]
  const L=gr.len*sc,o=a.off||[0,0,0],w0=w.clone(),full=gr.len>.13?L:L*1.85;return{w:w0,full,hb,c:w.addScaledVector(F,L*(.52+o[0])).addScaledVector(T,L*o[1]).addScaledVector(N,L*o[2]),F,T,N,B:B.clone(),r:Math.min(L,full*.55)*.42,sc:L/22}}
 // ---------- mani procedurali: sostituiscono la mano del modello mentre impugna un oggetto, così le dita lo stringono davvero ----------
 // Mano destra: polso all'origine, +Y verso le nocche, +Z dorso, pollice a -X. Le dita si avvolgono attorno a un manico di raggio Rh che passa lungo X.
-function handFor(sd,Rh){PROPS.hands=PROPS.hands||{};const key=sd+Rh;return PROPS.hands[key]||(PROPS.hands[key]=buildHand(Rh))}
+function handFor(sd,Rh){PROPS.hands=PROPS.hands||{};const key=sd+Rh+(OGG.mano?'m':'');return PROPS.hands[key]||(PROPS.hands[key]=buildHand(Rh))}
 // hold: l'oggetto (asse +Y dal manico alla punta) passa nel pugno. dir = direzione dell'oggetto; gy = punto del manico stretto dalla mano; len = distanza della punta;
 // rh = raggio del manico; rev = punta dal lato del mignolo (presa "a pugnale"); bend = quanto può piegarsi il polso; hint = verso dove vanno le nocche se serve
 function hold(obj,k,sd,o){unhold(obj,1);const h=Object.assign({obj,k,sd,phi:1,gy:0,len:0,rh:4.3},o);HOLD.push(h);obj.visible=true;holdApply(h);return h}
@@ -53,7 +53,7 @@ function armIK(k,sd,T,pole){const B=k.rig.B,u=B['u'+sd],l=B['l'+sd],w=B['w'+sd];
 // mezzo giro dell'avambraccio (la mano si gira di 180 gradi attorno al proprio asse), riapplicato a ogni disegno: FTWIST=[{k,sd}]
 const FTWIST=[],_twA=new THREE.Vector3(),_twQ=new THREE.Quaternion();
 function twistArm(k,sd){const B=k.rig.B,l=B['l'+sd],w=B['w'+sd];if(!l||!w||w.parent!==l||w.position.lengthSq()<1e-10)return;_twA.copy(w.position).normalize();l.quaternion.multiply(_twQ.setFromAxisAngle(_twA,Math.PI));l.updateMatrixWorld(true)}
-function holdFrame(){for(const h of HOLD)holdApply(h);let ik=0;for(const r of ARMIK){const p=r.t();if(p){armIK(r.k,r.sd,p,r.pole);ik=1}}for(const r of FTWIST)twistArm(r.k,r.sd);if(ik)for(const h of HOLD)if(h.ik)holdApply(h)}// gli oggetti con ik:1 seguono la mano dopo l'IK
+function holdFrame(){for(const h of HOLD)holdApply(h);let ik=0;for(let it=0;it<(ARMIK.some(r=>r.iter)?4:1);it++){for(const r of ARMIK){const p=r.t();if(p){armIK(r.k,r.sd,p,r.pole);ik=1}}if(ik&&it<3&&ARMIK.some(r=>r.iter))for(const h of HOLD)if(h.ik)holdApply(h)}for(const r of FTWIST)twistArm(r.k,r.sd);if(ik)for(const h of HOLD)if(h.ik)holdApply(h)}// iter: la mano va con l'IK dove deve stare il centro della presa (si ripete perché l'orientamento della mano dipende dall'avambraccio)// gli oggetti con ik:1 seguono la mano dopo l'IK
 const nearS=k=>k.f>0?'R':'L';
 // porta la punta dell'oggetto impugnato (o il centro del pugno, o la mano nuda) verso un punto muovendo il braccio della posa
 function armTo(k,sd,e,gain){const p=k.fpose,key=sd===nearS(k)?'n':'f';p[key][0]=Math.max(-120,Math.min(455,p[key][0]+k.f*e.x*1.1*gain));p[key][1]=Math.max(-440,Math.min(430,p[key][1]-e.y*1.1*gain));if(p[key][0]>=450&&k.f*e.x>4)k.x+=k.f*Math.min(6,k.f*e.x*.3);return e.length()}
@@ -74,7 +74,7 @@ function restW(v,which,qx,qy,out){const I=restInfo(v);if(!I)return null;const a=
 const OGG={},OGGP={},OGGK={heart:['cuore'],ultimate:['cuore','spina'],magic:['waifu'],pray:['statua'],scream:['microfono'],burp:['birra'],bottle:['bottiglia'],syringe:['siringa'],camper:['telefono','camper'],police:['telefono'],disco:['telefono','palla'],head:['spina'],half:['intestino']};
 function loadOgg(n){if(OGGP[n])return OGGP[n];return OGGP[n]=(async()=>{try{const r=await fetch('oggetti/'+n+'.js');if(!r.ok)throw new Error(r.status);const t=await r.text(),a=t.indexOf("='")+2,b=t.lastIndexOf("'"),u=b64bytes(t.slice(a,b));
   const gl=await new Promise((ok,ko)=>gltfLoader().parse(u.buffer,'oggetti/',ok,ko)),s=gl.scene;s.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const m=o.material;if(m&&window.ENVTEX&&!m.envMap){m.envMap=ENVTEX;m.envMapIntensity=.75}}});OGG[n]=s;return s}catch(e){console.warn('oggetto non caricato',n,e);return null}})()}
-function oggPrep(kind){return Promise.all((OGGK[kind]||[]).map(loadOgg))}
+function oggPrep(kind){return Promise.all((OGGK[kind]||[]).concat('mano').map(loadOgg))}// la mano modellata delle prese serve a tutti
 // G: l'oggetto disegnato. rot porta l'asse lungo del modello su quello dell'oggetto; poi scala sulla misura più lunga (per k) e centra sul suo ingombro.
 function fitOgg(G,n,o={}){const s=OGG[n];if(!s||!G)return false;if(G.userData.ogg===n)return true;const par=G.parent,p=G.position.clone(),q=G.quaternion.clone(),sc=G.scale.clone(),vis=G.visible;if(par)par.remove(G);G.position.set(0,0,0);G.quaternion.identity();G.scale.set(1,1,1);G.updateMatrixWorld(true);
  const tb=new THREE.Box3().setFromObject(G),W=new THREE.Group(),m=s.clone();W.add(m);if(o.rot)m.rotation.set(o.rot[0],o.rot[1],o.rot[2]);W.updateMatrixWorld(true);const mb=new THREE.Box3().setFromObject(W),ts=tb.getSize(new THREE.Vector3()),ms=mb.getSize(new THREE.Vector3()),k=(o.k||1)*Math.max(ts.x,ts.y,ts.z)/Math.max(ms.x,ms.y,ms.z);
@@ -1119,6 +1119,14 @@ function fMine(T,k,v,f){propsInit();mineInit();pose3D(k);pose3D(v);holdFrame();c
 // ---------- Lorenzo (costume Ultimate): «Fuoricampo». Strappa la testa con la spina dorsale (alla Mastro), poi il cuore (alla Damiano);
 // lancia il cuore in alto e lo colpisce come una palla da baseball, usando la spina dorsale come mazza e la testa come punta ----------
 // la testa staccata va appoggiata sopra la spina dorsale: la testa sta più avanti dell'osso del collo, quindi la sposto sull'asse della spina
+// la spina dorsale è curva: la raddrizzo sull'asse della mazza (base e cima sull'asse Y del pezzo), così le mani la stringono davvero; restituisce l'altezza della base
+function ultSpineAlign(p){const P=p.it.P,v=new THREE.Vector3(),pts=[];P.updateMatrixWorld(true);const inv=P.matrixWorld.clone().invert();
+ heldSpine.traverse(m=>{if(!m.isMesh||!m.visible)return;const pa=m.geometry.attributes.position,st=Math.max(1,pa.count/1500|0);for(let i=0;i<pa.count;i+=st){v.fromBufferAttribute(pa,i);m.localToWorld(v);v.applyMatrix4(inv);pts.push(v.clone())}});
+ if(pts.length<10)return -168;let y0=1e9,y1=-1e9;for(const q of pts){y0=Math.min(y0,q.y);y1=Math.max(y1,q.y)}const L=y1-y0,mean=(a,b)=>{const c=new THREE.Vector3();let n=0;for(const q of pts)if(q.y>=a&&q.y<=b){c.add(q);n++}return c.multiplyScalar(1/Math.max(1,n))};
+ const bo=mean(y0,y0+L*.14),to=mean(y1-L*.14,y1),Q=new THREE.Quaternion().setFromUnitVectors(to.clone().sub(bo).normalize(),new THREE.Vector3(0,1,0));
+ let m0=1e9,m1=-1e9;for(const q of pts){const y=q.clone().applyQuaternion(Q).y;m0=Math.min(m0,y);m1=Math.max(m1,y)}
+ heldSpine.quaternion.premultiply(Q);heldSpine.position.applyQuaternion(Q);const b2=bo.clone().applyQuaternion(Q),dy=y1-m1;heldSpine.position.x-=b2.x;heldSpine.position.z-=b2.z;heldSpine.position.y+=dy;
+ return m0+dy+L*.07}
 function ultHeadFit(p){const P=p.it.P,G=p.it.r.G,v=new THREE.Vector3();P.updateMatrixWorld(true);const inv=P.matrixWorld.clone().invert(),pts=[];let mn=1e9;
  G.traverse(m=>{if(!m.isSkinnedMesh||!m.visible)return;const pa=m.geometry.attributes.position,pt=m.geometry.attributes.aPart;for(let i=0;i<pa.count;i+=3){if(pt&&Math.round(pt.getX(i))!==5)continue;m.getVertexPosition(i,v);m.localToWorld(v);v.applyMatrix4(inv);pts.push(v.clone());if(v.y<mn)mn=v.y}});
  if(!pts.length)return;let sx=0,sz=0,n=0;for(const q of pts)if(q.y<mn+14){sx+=q.x;sz+=q.z;n++}const top=new THREE.Box3().setFromObject(heldSpine).applyMatrix4(inv).max.y;
@@ -1136,7 +1144,7 @@ function fUltimate(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3St
  if(T===46){const n=NK();CUT(n.x,n.y,2.8,{yaw:-f*.42,pitch:.06,fov:26,dol:.0012});sfx('ossa')}
  // lo strappo: testa e spina dorsale escono insieme
  if(T===64){const q=G2v(NK());slowN=2;U.uMode.value=1.3;U.uCut.value.set(1,0,0,-9);v.noHead=true;pool(v.x,110);shake=34;stop=14;flash=Math.max(flash,.2);sfx('rip');sfx('ossa');sfx('squish');gush(q,70,26,-f*.5);bones(q,14);
-  if(v.rig.head3D){const p=spawn(v,{c:bonePos(v,v.rig.B.neck?'neck':'head'),part:5,held:1});PROPS.uP=p;p.it.P.add(heldSpine);heldSpine.position.set(0,48,0);heldSpine.rotation.set(0,0,0);heldSpine.visible=true;ultHeadFit(p);
+  if(v.rig.head3D){const p=spawn(v,{c:bonePos(v,v.rig.B.neck?'neck':'head'),part:5,held:1});PROPS.uP=p;p.it.P.add(heldSpine);heldSpine.position.set(0,48,0);heldSpine.rotation.set(0,0,0);heldSpine.visible=true;PROPS.uGy=ultSpineAlign(p);ultHeadFit(p);
    PROPS.uh=hold(p.it.P,k,sd,{dir:()=>new THREE.Vector3(Math.sin(tick*.17)*.12,1,Math.cos(tick*.13)*.1),gy:44,len:-178,rh:6,bend:1.2,ik:1})}
   jet({src:()=>G2v(NK()),ang:()=>-Math.PI/2+f*.15,life:150,rate:13,sp:17,r:2,spread:.08});
   v.fpose=P({h:640,t:-4,hd:0,tw:0,x:-6,n:[120,40],f:[80,60],nl:[-150,0,0],fl:[120,0,0]});v.fk=.5;k.fpose=P({h:650,t:-10,hd:-16,tw:0,x:-10,n:[255,-345],f:[110,40],nl:[-300,0,0],fl:[230,0,0]});k.fk=.25}
@@ -1171,15 +1179,15 @@ function fUltimate(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3St
   swD=u=>{for(let i=1;i<SWK.length;i++)if(u<=SWK[i][0]){const A=SWK[i-1],B=SWK[i];return lerpV(BD(A[1]),BD(B[1]),(u-A[0])/(B[0]-A[0]))}return BD(SWK[SWK.length-1][1])},
   grip2=()=>{const h=PROPS.uh;if(!h||!h.obj)return null;const B=PROPS.ud.clone().normalize();return h.obj.position.clone().addScaledVector(B,h.gy+15)};
  const HIT=268,SW0=244;
- if(T===212&&PROPS.uP){k.x-=f*40;CUT(k.x+f*90,380,1.4,{yaw:-f*.12,pitch:.01,fov:32,dol:.001});PROPS.ud=BD([-.45,1,-.2]);PROPS.uh=hold(PROPS.uP.it.P,k,sd,{dir:()=>PROPS.ud,gy:-168,len:34,rh:5.5,bend:1.4,ik:1});
+ if(T===212&&PROPS.uP){k.x-=f*40;CUT(k.x+f*90,380,1.4,{yaw:-f*.12,pitch:.01,fov:32,dol:.001});PROPS.ud=BD([-.45,1,-.2]);PROPS.uh=hold(PROPS.uP.it.P,k,sd,{dir:()=>PROPS.ud,gy:PROPS.uGy||-168,len:34,rh:5.5,bend:1.4,ik:1});
   k.fpose=BS({n:[-10,-70],f:[230,40]});k.fk=.3;sfx('swingL')}
  if(T>212&&T<236)PROPS.ud=BD([-.45-Math.sin(T*.25)*.06,1,-.2]);
  // il lancio: il cuore sale appena sopra la testa
  if(T===236){k.fpose=BS({n:[-10,-70],f:[260,-200]});k.fk=.7;sfx('swingL')}
  if(T===240&&PROPS.hh){unhold(Hm,1);PROPS.hh=null;PROPS.uFly={v:new THREE.Vector3(f*.3,12.6,.2),hit:0}}
  // lo swing in motion capture
- if(T===SW0){PROPS.uh2=hold(PROPS.udm||(PROPS.udm=new THREE.Object3D()),k,fs,{dir:()=>PROPS.ud,rh:5.5,gy:0,len:0,bend:2.2});ARMIK.length=0;
-  ARMIK.push({k,sd:fs,t:()=>PROPS.uSw&&state==='fatality'?grip2():null,pole:new THREE.Vector3(0,-1,-.4)});PROPS.uSw=1;PROPS.uU=0;CUT(k.x+f*80,320,1.18,{yaw:-f*.08,pitch:.02,fov:32,dol:.0006})}
+ if(T===SW0){PROPS.uh2=hold(PROPS.udm||(PROPS.udm=new THREE.Object3D()),k,fs,{dir:()=>PROPS.ud,rh:5.5,gy:0,len:0,bend:2.2,ik:1});ARMIK.length=0;
+  ARMIK.push({k,sd:fs,t:()=>{if(!PROPS.uSw||state!=='fatality')return null;const q=grip2(),g=PROPS.uh2&&PROPS.uh2.g,h=PROPS.uh2&&PROPS.uh2.hand;if(!q||!g||!h)return q;const C=h.userData.C;return q.addScaledVector(g.F,-C.y*g.sc).addScaledVector(g.N,-C.z*g.sc)},iter:1,pole:new THREE.Vector3(0,-1,-.4)});PROPS.uSw=1;PROPS.uU=0;CUT(k.x+f*80,320,1.18,{yaw:-f*.08,pitch:.02,fov:32,dol:.0006})}
  if(PROPS.uSw&&T>=SW0&&T<HIT+42){const u=T<HIT-10?16*(T-SW0)/(HIT-10-SW0):T<=HIT?16+8*(T-(HIT-10))/10:Math.min(50,24+(T-HIT)*.65),up=PROPS.uU;PROPS.uU=u;
   k.fpose=null;k.fclip={c:'fuoricampo',f:u,fp:up,b:T<SW0+8?12:3};PROPS.ud=swD(u);if(T===HIT-10)sfx('swingH')}
  if(PROPS.uSw&&T===HIT+42){PROPS.uSw=0;ARMIK.length=0;if(PROPS.udm)unhold(PROPS.udm,1);PROPS.uh2=null;k.fclip=null;k.fpose=P({h:600,t:-4,hd:-8,tw:0,x:-6,n:[60,190],f:[40,190],nl:[-330,0,0],fl:[260,0,0]});k.fk=.1}
