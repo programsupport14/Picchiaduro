@@ -21,7 +21,7 @@ function gripHand(k,sd,B,phi,hint){const R=k.rig,M=R.model,gr=M.grip&&M.grip[sd]
  const L=gr.len*sc,o=a.off||[0,0,0],w0=w.clone(),full=gr.len>.13?L:L*1.85;return{w:w0,full,hb,c:w.addScaledVector(F,L*(.52+o[0])).addScaledVector(T,L*o[1]).addScaledVector(N,L*o[2]),F,T,N,B:B.clone(),r:Math.min(L,full*.55)*.42,sc:L/22}}
 // ---------- mani procedurali: sostituiscono la mano del modello mentre impugna un oggetto, così le dita lo stringono davvero ----------
 // Mano destra: polso all'origine, +Y verso le nocche, +Z dorso, pollice a -X. Le dita si avvolgono attorno a un manico di raggio Rh che passa lungo X.
-function handFor(sd,Rh){PROPS.hands=PROPS.hands||{};const key=sd+Rh+(OGG.mano?'m':'');return PROPS.hands[key]||(PROPS.hands[key]=buildHand(Rh))}
+function handFor(sd,Rh,wr){PROPS.hands=PROPS.hands||{};wr=wr?Math.round(wr*4)/4:0;const key=sd+Rh+(OGG.mano?'m'+wr:'');return PROPS.hands[key]||(PROPS.hands[key]=buildHand(Rh,wr))}
 // hold: l'oggetto (asse +Y dal manico alla punta) passa nel pugno. dir = direzione dell'oggetto; gy = punto del manico stretto dalla mano; len = distanza della punta;
 // rh = raggio del manico; rev = punta dal lato del mignolo (presa "a pugnale"); bend = quanto può piegarsi il polso; hint = verso dove vanno le nocche se serve
 function hold(obj,k,sd,o){unhold(obj,1);const h=Object.assign({obj,k,sd,phi:1,gy:0,len:0,rh:4.3},o);HOLD.push(h);obj.visible=true;holdApply(h);return h}
@@ -37,7 +37,7 @@ function holdApply(h){const B=(typeof h.dir==='function'?h.dir():h.dir).clone().
  const U=(h.force&&hint?hint:d).clone();U.addScaledVector(B,-U.dot(B));if(U.lengthSq()<.03){U.copy(hint||_up);U.addScaledVector(B,-U.dot(B));if(U.lengthSq()<1e-3)U.set(1,0,0)}U.normalize();
  const del=Math.acos(Math.max(-1,Math.min(1,U.dot(d)))),mx=h.bend==null?.9:h.bend;_hY.copy(d);if(del>1e-3)_hY.applyQuaternion(_hQ0.identity().slerp(_hQ.setFromUnitVectors(d,U),Math.min(1,mx/del)));_hY.normalize();
  const t=B.clone().addScaledVector(_hY,-B.dot(_hY));if(t.lengthSq()<1e-4)t.copy(U);t.normalize();const sg=(h.sd==='R'?1:-1)*(h.rev?-1:1);_hX.copy(t).multiplyScalar(-sg);_hZ.crossVectors(_hX,_hY).normalize();
- const hand=h.hand||(h.hand=handFor(h.sd,h.rh)),s=Math.max(.8,Math.min(1.3,(gr.len>.13?gr.len:gr.len*1.85)*sc/44)),C=hand.userData.C;handPaint(hand,h.col==null?gr.col:h.col);
+ const s=Math.max(.8,Math.min(1.3,(gr.len>.13?gr.len:gr.len*1.85)*sc/44)),hand=h.hand||(h.hand=handFor(h.sd,h.rh,gr.wr?gr.wr*sc/s:0)),C=hand.userData.C;handPaint(hand,h.col==null?gr.col:h.col);
  _gm1.makeBasis(_hX,_hY,_hZ);hand.quaternion.setFromRotationMatrix(_gm1);hand.scale.set(h.sd==='L'?-s:s,s,s);hand.position.copy(w);hand.visible=true;hb.scale.setScalar(.001);
  const c=w.clone().addScaledVector(_hY,C.y*s).addScaledVector(_hZ,C.z*s),X=new THREE.Vector3().crossVectors(B,_hZ).normalize(),Z=new THREE.Vector3().crossVectors(X,B);_gm1.makeBasis(X,B,Z);h.obj.quaternion.setFromRotationMatrix(_gm1);if(h.roll)h.obj.rotateY(h.roll);
  h.obj.position.copy(c).addScaledVector(B,-h.gy);h.g={c,w,F:_hY.clone(),T:t,N:_hZ.clone(),B:B.clone(),r:h.rh*s,sc:s,hb,full:44*s};h.tip=h.obj.position.clone().addScaledVector(B,h.len);return h.g}
@@ -740,7 +740,8 @@ function fAcid(T,k,v,f){propsInit();fire3Init();pose3D(k);pose3D(v);holdFrame();
 function phoneCall(T,k,f,T0,subs){const Ph=PROPS.phone,sd='R',Hk=headW(k);
  // la clip vera (telefonata di Sena, Mixamo): prende il telefono, lo porta all'orecchio, parla gesticolando con l'altra mano, riattacca.
  // Il tempo della clip si adatta alla durata della chiamata di ogni mossa: salita 40 tick, chiamata quanto serve, discesa 24 tick.
- if(T>=8&&T<T0){const u=T-8,L=T0-8,a=40,b=24,cf=u<a?u/a*44:u<L-b?44+(u-a)/Math.max(1,L-a-b)*(186-44):186+(u-(L-b))/b*26,pf=k.fclip&&k.fclip.c==='phone'?k.fclip.f:cf;k.fclip={c:'phone',f:cf,fp:pf,b:T===8?10:6}}
+ // stessa velocità per tutti (Cholo, Sena, Biagio): la parte parlata va a ~2 fotogrammi per tick; se la chiamata è più lunga, prima ripete avanti e indietro i gesti della prima parte (44-120), poi fa la parte finale
+ if(T>=8&&T<T0){const u=T-8,L=T0-8,a=40,b=24,sp=Math.max(1,L-a-b),NT=71,tt=u-a,talk=()=>{if(sp<=NT+20)return 44+tt/sp*142;const w=sp-NT,n=Math.round(w*2/152),r=n?152*n/w:0;if(tt<w){if(!r)return 44;const q=(tt*r)%152;return q<76?44+q:120-(q-76)}return 44+(tt-w)/NT*142},cf=u<a?u/a*44:u<L-b?talk():186+(u-(L-b))/b*26,pf=k.fclip&&k.fclip.c==='phone'?k.fclip.f:cf;k.fclip={c:'phone',f:cf,fp:pf,b:T===8?10:6}}
  if(T===T0)k.fclip=null;
  if(T===14){PROPS.ph=hold(Ph,k,sd,{dir:()=>new THREE.Vector3(-killer.f*.25,1,.12).normalize(),hint:()=>new THREE.Vector3(-killer.f*.4,.2,-.9),bend:.35,rh:6.4,gy:-2,len:0,roll:Math.PI/2});sfx('click')}
  if(T===20){const h=handW(k,sd);CUT(h.x+f*6,h.y+16,2.7,{yaw:f*.5,fov:26,rise:1.2,dol:.0006})}
@@ -1145,7 +1146,7 @@ function fUltimate(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3St
  // lo strappo: testa e spina dorsale escono insieme
  if(T===64){const q=G2v(NK());slowN=2;U.uMode.value=1.3;U.uCut.value.set(1,0,0,-9);v.noHead=true;pool(v.x,110);shake=34;stop=14;flash=Math.max(flash,.2);sfx('rip');sfx('ossa');sfx('squish');gush(q,70,26,-f*.5);bones(q,14);
   if(v.rig.head3D){const p=spawn(v,{c:bonePos(v,v.rig.B.neck?'neck':'head'),part:5,held:1});PROPS.uP=p;p.it.P.add(heldSpine);heldSpine.position.set(0,48,0);heldSpine.rotation.set(0,0,0);heldSpine.visible=true;PROPS.uGy=ultSpineAlign(p);ultHeadFit(p);
-   PROPS.uh=hold(p.it.P,k,sd,{dir:()=>new THREE.Vector3(Math.sin(tick*.17)*.12,1,Math.cos(tick*.13)*.1),gy:44,len:-178,rh:6,bend:1.2,ik:1})}
+   PROPS.uh=hold(p.it.P,k,sd,{dir:()=>new THREE.Vector3(Math.sin(tick*.17)*.08,1,Math.cos(tick*.13)*.06),hint:()=>new THREE.Vector3(-f*.3,0,1),force:1,roll:Math.PI,gy:44,len:-178,rh:6,bend:1.2,ik:1})}
   jet({src:()=>G2v(NK()),ang:()=>-Math.PI/2+f*.15,life:150,rate:13,sp:17,r:2,spread:.08});
   v.fpose=P({h:640,t:-4,hd:0,tw:0,x:-6,n:[120,40],f:[80,60],nl:[-150,0,0],fl:[120,0,0]});v.fk=.5;k.fpose=P({h:650,t:-10,hd:-16,tw:0,x:-10,n:[255,-345],f:[110,40],nl:[-300,0,0],fl:[230,0,0]});k.fk=.25}
  if(T>64&&T<120){v.fpose.n=[120+Math.sin(T*2.1)*50,40+Math.cos(T*1.7)*60];v.fpose.f=[80+Math.cos(T*2.3)*50,60+Math.sin(T*1.5)*60];if(T%11===0)sfx('squish')}
