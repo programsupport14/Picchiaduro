@@ -1118,6 +1118,11 @@ function fMine(T,k,v,f){propsInit();mineInit();pose3D(k);pose3D(v);holdFrame();c
  if(T===330){mineEnd();k.fpose=null;endWin(k)}}
 // ---------- Lorenzo (costume Ultimate): «Fuoricampo». Strappa la testa con la spina dorsale (alla Mastro), poi il cuore (alla Damiano);
 // lancia il cuore in alto e lo colpisce come una palla da baseball, usando la spina dorsale come mazza e la testa come punta ----------
+// la testa staccata va appoggiata sopra la spina dorsale: la testa sta più avanti dell'osso del collo, quindi la sposto sull'asse della spina
+function ultHeadFit(p){const P=p.it.P,G=p.it.r.G,v=new THREE.Vector3();P.updateMatrixWorld(true);const inv=P.matrixWorld.clone().invert(),pts=[];let mn=1e9;
+ G.traverse(m=>{if(!m.isSkinnedMesh||!m.visible)return;const pa=m.geometry.attributes.position,pt=m.geometry.attributes.aPart;for(let i=0;i<pa.count;i+=3){if(pt&&Math.round(pt.getX(i))!==5)continue;m.getVertexPosition(i,v);m.localToWorld(v);v.applyMatrix4(inv);pts.push(v.clone());if(v.y<mn)mn=v.y}});
+ if(!pts.length)return;let sx=0,sz=0,n=0;for(const q of pts)if(q.y<mn+14){sx+=q.x;sz+=q.z;n++}const top=new THREE.Box3().setFromObject(heldSpine).applyMatrix4(inv).max.y;
+ G.position.add(new THREE.Vector3(-sx/n,top-mn-6,-sz/n))}
 function fUltimate(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3Step();const sd=nearS(k),fs=sd==='R'?'L':'R',mid=(k.x+v.x)/2,I=restInfo(v),U=v.rig.m.userData.u,Hm=PROPS.heart,Cw=()=>I?restW(v,'chest',0,0,0):chestW3(v,k),
   hole=o=>{if(I&&U.uHole){U.uHole.value.set(I.chest.x,I.chest.y,I.chest.s,o);U.uSmT.value=PROPS.smT||0}},NK=()=>V3(bonePos(v,v.rig.B.neck?'neck':'spine')),
   lerpV=(a,b,t)=>a.clone().lerp(b,t).normalize();
@@ -1131,7 +1136,7 @@ function fUltimate(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3St
  if(T===46){const n=NK();CUT(n.x,n.y,2.8,{yaw:-f*.42,pitch:.06,fov:26,dol:.0012});sfx('ossa')}
  // lo strappo: testa e spina dorsale escono insieme
  if(T===64){const q=G2v(NK());slowN=2;U.uMode.value=1.3;U.uCut.value.set(1,0,0,-9);v.noHead=true;pool(v.x,110);shake=34;stop=14;flash=Math.max(flash,.2);sfx('rip');sfx('ossa');sfx('squish');gush(q,70,26,-f*.5);bones(q,14);
-  if(v.rig.head3D){const p=spawn(v,{c:bonePos(v,v.rig.B.neck?'neck':'head'),part:5,held:1});PROPS.uP=p;p.it.P.add(heldSpine);heldSpine.position.set(0,48,0);heldSpine.rotation.set(0,0,0);heldSpine.visible=true;
+  if(v.rig.head3D){const p=spawn(v,{c:bonePos(v,v.rig.B.neck?'neck':'head'),part:5,held:1});PROPS.uP=p;p.it.P.add(heldSpine);heldSpine.position.set(0,48,0);heldSpine.rotation.set(0,0,0);heldSpine.visible=true;ultHeadFit(p);
    PROPS.uh=hold(p.it.P,k,sd,{dir:()=>new THREE.Vector3(Math.sin(tick*.17)*.12,1,Math.cos(tick*.13)*.1),gy:44,len:-178,rh:6,bend:1.2,ik:1})}
   jet({src:()=>G2v(NK()),ang:()=>-Math.PI/2+f*.15,life:150,rate:13,sp:17,r:2,spread:.08});
   v.fpose=P({h:640,t:-4,hd:0,tw:0,x:-6,n:[120,40],f:[80,60],nl:[-150,0,0],fl:[120,0,0]});v.fk=.5;k.fpose=P({h:650,t:-10,hd:-16,tw:0,x:-10,n:[255,-345],f:[110,40],nl:[-300,0,0],fl:[230,0,0]});k.fk=.25}
@@ -1151,7 +1156,7 @@ function fUltimate(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3St
  if(T>=156)PROPS.smT=Math.min(2.2,(PROPS.smT||0)+.012);
  if(T===164){slowN=1;const p=Hm.position;CUT(p.x+f*8,p.y+8,3,{yaw:f*.4,pitch:-.03,fov:26,dol:.001,rise:.4})}
  if(T>=170&&T<178){v.fpose=P({h:626,t:14,hd:0,tw:0,n:[150,-40],f:[110,60],nl:[-160,0,0],fl:[130,0,0]});v.fk=.08}
- if(T>=178){v.fpose=null;v.fclip={c:'morto',f:Math.min(71,(T-178)*.5),b:T<180?14:6};if(T===250)sfx('thud');if(T===250)pool(v.x,140)}
+ if(T>=178){v.fpose=null;v.fclip={c:'morto',f:Math.min(71,(T-178)*1.1),b:T<180?14:6};if(T===222){sfx('thud');pool(v.x,140)}}
  {const dmin=T<170?110:200;if(T>22&&f*(v.x-k.x)<dmin)k.x+=(v.x-f*dmin-k.x)*(T<170?1:.25)}
  if(T===184){CUT(k.x+f*40,380,1.35,{yaw:-f*.3,pitch:.02,fov:32,dol:.0012});k.fpose=P({h:610,t:-6,hd:-8,tw:0,x:-6,n:[230,-330],f:[230,-300],nl:[-330,0,0],fl:[260,0,0]});k.fk=.2;sfx('urlo')}
  // il cuore batte ancora in mano
@@ -1159,31 +1164,37 @@ function fUltimate(T,k,v,f){propsInit();pose3D(k);pose3D(v);holdFrame();drops3St
   if(T%per===0&&amp>.08){sfx('battito');const ao=()=>{const q=Hm.localToWorld(Hm.userData.ao.clone());return[q.x,GROUND-q.y,q.z]};jet({src:ao,ang:-Math.PI/2-f*.5,life:5,rate:6*amp,sp:9*amp+2,r:1.6,spread:.25})}
   if(T%5===0){const p=Hm.position;fx.push({x:p.x+(Math.random()-.5)*14,y:GROUND-p.y+16,z:p.z,vz:0,vx:0,vy:.6,l:70,c:'#a00c18',r:1.3+Math.random()*1.4,g:.3,blood:1,stain:1})}}
  // 3) stacco: ora impugna la spina dorsale dalla base, come una mazza, con la testa in punta
- if(T===212&&PROPS.uP){k.x-=f*30;CUT(k.x+f*60,400,1.6,{yaw:f*.34,pitch:.02,fov:30,dol:.0012});PROPS.ud=new THREE.Vector3(-f*.35,1,-.3).normalize();PROPS.uh=hold(PROPS.uP.it.P,k,sd,{dir:()=>PROPS.ud,gy:-168,len:34,rh:5.5,bend:1.4,ik:1});
-  k.fpose=P({h:575,t:-2,hd:4,tw:-30,x:-10,n:[40,-300],f:[260,-40],nl:[-400,0,0],fl:[300,0,0]});k.fk=.3;sfx('swingL')}
- if(T>212&&T<240)PROPS.ud=new THREE.Vector3(-f*(.35+Math.sin(T*.25)*.08),1,-.3).normalize();
- // il lancio: il cuore sale appena sopra la testa
- if(T===240){k.fpose.f=[330,-250];k.fk=.7;sfx('swingL')}
- if(T===244&&PROPS.hh){unhold(Hm,1);PROPS.hh=null;PROPS.uFly={v:new THREE.Vector3(f*1.4,11.5,.6),hit:0};CUT(k.x+f*130,400,1.3,{yaw:-f*.18,pitch:-.03,fov:32,rise:.3})}
- if(T===250){k.fpose=P({h:560,t:-8,hd:2,tw:-60,x:-18,n:[-60,-280],f:[150,-150],nl:[-420,0,0],fl:[300,0,0]});k.fk=.5;PROPS.ud=new THREE.Vector3(-f*.85,.55,-.35).normalize()}
+ // 3) stacco: impugna la spina dorsale dalla base come una mazza (testa in punta). Posizione da battitore: di fianco, gambe larghe
+ const BS=(o)=>P(Object.assign({h:548,t:-4,hd:4,tw:0,x:-14,n:[60,-40],f:[80,-30],nl:[-430,0,0],fl:[330,0,0]},o)),
+  grip2=()=>{if(!PROPS.uh||!PROPS.uh.obj)return null;const h=PROPS.uh,B=PROPS.ud.clone().normalize();return h.obj.position.clone().addScaledVector(B,h.gy+15)};
+ if(T===212&&PROPS.uP){k.x-=f*40;CUT(k.x+f*90,380,1.4,{yaw:-f*.12,pitch:.01,fov:32,dol:.001});PROPS.ud=new THREE.Vector3(-f*.45,1,-.2).normalize();PROPS.uh=hold(PROPS.uP.it.P,k,sd,{dir:()=>PROPS.ud,gy:-168,len:34,rh:5.5,bend:1.4,ik:1});
+  k.fpose=BS({n:[-10,-70],f:[230,40]});k.fk=.3;sfx('swingL')}
+ if(T>212&&T<236)PROPS.ud=new THREE.Vector3(-f*(.45+Math.sin(T*.25)*.06),1,-.2).normalize();
+ // il lancio: il cuore sale appena sopra la testa, poi la seconda mano torna sulla mazza
+ if(T===236){k.fpose=BS({n:[-10,-70],f:[260,-200]});k.fk=.7;sfx('swingL')}
+ if(T===240&&PROPS.hh){unhold(Hm,1);PROPS.hh=null;PROPS.uFly={v:new THREE.Vector3(f*.4,12.2,.3),hit:0}}
+ if(T>=244&&T<258){const u=Math.min(1,(T-244)/8);k.fpose=BS({t:-4-u*4,tw:-u*40,x:-14-u*12,n:[-10-u*50,-70+u*10],f:[-10-u*40,-70+u*14],nl:[-430,0,0],fl:[330-u*60,0,0]});k.fk=.5;PROPS.ud=lerpV(new THREE.Vector3(-f*.45,1,-.2),new THREE.Vector3(-f*.8,.6,-.3),u);const g=grip2();if(g)aimHand(k,fs,g,.9)}
  const HIT=268;
- if(T>=258&&T<HIT){const u=(T-257)/(HIT-257);k.fpose=P({h:560,t:4+u*14,hd:6,tw:-60+u*200,x:-18+u*50,n:[-60+u*500,-280+u*190],f:[150,-150],nl:[-420,0,0],fl:[310,0,0]});k.fk=.95;
-  const a=new THREE.Vector3(-f*.85,.55,-.35).normalize(),b=new THREE.Vector3(-f*.1,.3,.7).normalize(),c=new THREE.Vector3(f,.1,.15).normalize();PROPS.ud=u<.5?lerpV(a,b,u*2):lerpV(b,c,(u-.5)*2);if(T===258)sfx('swingH')}
+ // lo swing: passo avanti, anche e spalle che girano, la mazza arriva orizzontale davanti al petto (come nella foto del battitore)
+ if(T>=258&&T<=HIT){const u=(T-258)/(HIT-258),e=u*u*(3-2*u);k.fpose=BS({h:548-e*12,t:-8+e*2,hd:4+e*6,tw:-40+e*120,x:-26+e*40,n:[-60+e*230,-60+e*95],f:[-50+e*230,-56+e*90],nl:[-430-e*20,0,e*30],fl:[270+e*120,0,0]});k.fk=.95;
+  const a=new THREE.Vector3(-f*.8,.6,-.3).normalize(),b=new THREE.Vector3(-f*.15,.25,.95).normalize(),c=new THREE.Vector3(f,.1,.3).normalize();PROPS.ud=e<.5?lerpV(a,b,e*2):lerpV(b,c,(e-.5)*2);const g=grip2();if(g)aimHand(k,fs,g,1);if(T===258)sfx('swingH')}
  const F=PROPS.uFly;
- if(F&&!F.hit){if(T<HIT){F.v.y-=.85;Hm.position.add(F.v);Hm.rotation.x+=.08;if(T>=HIT-5&&PROPS.uh){const tip=PROPS.uh.tip.clone().addScaledVector(PROPS.ud,-6);Hm.position.lerp(tip,(T-(HIT-6))/6)}}
-  if(T===HIT){F.hit=1;PROPS.ud=new THREE.Vector3(f,.1,.15).normalize();holdFrame();if(PROPS.uh)Hm.position.copy(PROPS.uh.tip);const p=Hm.position.clone(),q=G2v(p);slowN=3;stop=12;shake=40;flash=Math.max(flash,.25);v.flash=0;
+ if(F&&!F.hit){if(T<HIT){F.v.y-=.85;Hm.position.add(F.v);Hm.rotation.x+=.08;if(T>=HIT-6&&PROPS.uh){const tip=PROPS.uh.tip.clone().addScaledVector(PROPS.ud,-8);Hm.position.lerp(tip,(T-(HIT-7))/7)}}
+  if(T===HIT){F.hit=1;holdFrame();if(PROPS.uh)Hm.position.copy(PROPS.uh.tip).addScaledVector(PROPS.ud,-8);const p=Hm.position.clone(),q=G2v(p);slowN=3;stop=14;shake=40;flash=Math.max(flash,.2);
    sfx('hitH');sfx('squish');sfx('ossa');sfx('kickH');gush(q,90,20,f*2);bones(q,10);spark(q[0],q[1],f,true);sweat(q[0],q[1],f,20);
    for(let i=0;i<90;i++)drops3('b',p.clone().add(new THREE.Vector3((Math.random()-.5)*12,(Math.random()-.5)*12,(Math.random()-.5)*12)),new THREE.Vector3(f*(3+Math.random()*12),(Math.random()-.3)*7,(Math.random()-.5)*8),{r:1.2+Math.random()*2.8});
-   const Lx=Math.max(160,Math.min(AW-160,p.x+f*980)),n=46;F.v.set((Lx-p.x)/n,(.38*n*n-p.y+14)/n,1.2);F.land=0;F.sp=.55;
-   CUT(p.x-f*10,p.y,3.2,{yaw:f*.5,pitch:.03,fov:24});const B2=Hm.userData.body;if(B2)B2.scale.set(1.25,.7,1.25)}}
- if(F&&F.hit&&!F.land){if(T>HIT){F.v.y-=.76;Hm.position.add(F.v);Hm.rotation.z-=f*F.sp;Hm.rotation.x+=.21;const p=Hm.position,B2=Hm.userData.body;if(B2)B2.scale.lerp(new THREE.Vector3(1,1,1),.15);
-   fx.push({x:p.x,y:GROUND-p.y,z:p.z,vz:0,vx:-F.v.x*.1,vy:.4,l:60,c:'#a00c18',r:1.6+Math.random()*1.8,g:.4,blood:1,stain:1});
-   if(T===HIT+6)slowN=1;if(T>=HIT+8&&T%3===0)MOVE(p.x,Math.max(260,p.y+60),1.25,{yaw:-f*.12,fov:34});
-   if(p.y<=14){p.y=14;F.land=1;const q=G2v(p);pool(p.x,90);gush(q,80,16,f);bones(q,6);shake=18;stop=4;sfx('squish');sfx('thud');if(B2)B2.scale.set(1.5,.35,1.5);Hm.rotation.set(0,Hm.rotation.y,0);CUT(p.x-f*90,250,1.5,{yaw:f*.28,pitch:.05,fov:30})}}}
- if(T===HIT+4)k.fpose=P({h:575,t:20,hd:10,tw:150,x:30,n:[230,-330],f:[120,-120],nl:[-420,0,0],fl:[320,0,0]}),k.fk=.25;
- if(T>HIT&&T<HIT+20)PROPS.ud=lerpV(PROPS.ud,new THREE.Vector3(f*.1,.45,-1),.18);
- if(T===HIT+80){CUT(k.x+f*30,350,1.3,{yaw:-f*.12,dol:.001});k.fpose=P({h:600,t:-6,hd:-10,tw:-20,x:-8,n:[110,-190],f:[200,40],nl:[-330,0,0],fl:[260,0,0]});k.fk=.2;PROPS.ud=new THREE.Vector3(-f*.75,.6,-.25).normalize();say('ACCOPPALO',420);sfx('thud')}
+   F.v.set(f*34,19,-26);F.sp=.6;F.far=0;CUT(k.x+f*80,300,1.12,{yaw:-f*.08,pitch:.02,fov:32});const B2=Hm.userData.body;if(B2)B2.scale.set(1.25,.7,1.25)}}
+ // fuoricampo: il cuore vola lontanissimo, oltre lo sfondo, fino a sparire
+ if(F&&F.hit&&!F.far&&T>HIT){F.v.y-=.22;F.v.multiplyScalar(.995);Hm.position.add(F.v);Hm.rotation.z-=f*F.sp;Hm.rotation.x+=.21;const p=Hm.position,B2=Hm.userData.body;if(B2)B2.scale.lerp(new THREE.Vector3(1,1,1),.15);
+  if(T%2===0)fx.push({x:p.x,y:GROUND-p.y,z:p.z,vz:0,vx:-F.v.x*.05,vy:.4,l:50,c:'#a00c18',r:2+Math.random()*2,g:.15,blood:1});
+  if(T===HIT+6)slowN=1;if(T>=HIT+12&&T%2===0)MOVE(Math.max(150,Math.min(AW-150,p.x)),Math.max(330,Math.min(700,p.y)),1.05,{yaw:-f*.1,fov:36});
+  if(T>=HIT+56){F.far=1;Hm.visible=false;sfx('zap');shake=6}}
+ // dopo il colpo: resta in posa da battitore, poi abbassa la mazza
+ if(T>HIT&&T<HIT+20){const u=(T-HIT)/20;k.fpose=BS({h:536,t:-6+u*8,hd:10-u*20,tw:80+u*60,x:26,n:[170-u*60,35-u*180],f:[180-u*60,34-u*176],nl:[-450,0,30],fl:[390,0,0]});k.fk=.4;PROPS.ud=lerpV(PROPS.ud,new THREE.Vector3(-f*.3,.35,-.9),.15);const g=grip2();if(g)aimHand(k,fs,g,.8)}
+ if(T>=HIT+20&&T<HIT+60){const g=grip2();if(g)aimHand(k,fs,g,.6)}
+ if(T===HIT+60){CUT(k.x+f*30,350,1.3,{yaw:-f*.12,dol:.001});k.fpose=P({h:600,t:-4,hd:-8,tw:0,x:-6,n:[60,190],f:[40,190],nl:[-330,0,0],fl:[260,0,0]});k.fk=.12;PROPS.ud=new THREE.Vector3(f*.12,-1,.12).normalize();say('ACCOPPALO',420);sfx('thud')}
+ if(T>HIT+60)PROPS.ud=PROPS.ud.clone().lerp(new THREE.Vector3(f*.12,-1,.12).normalize(),.2).normalize();
  hole(PROPS.hOn||0);
- if(T===HIT+130)endWin(k)}
+ if(T===HIT+110)endWin(k)}
 const FATF_EXTRA={ultimate:fUltimate,mine:fMine,magic:fMagic,pray:fPray,scream:fScream,burp:fBurp,bottle:fBottle,half:fSplit,film:fFilm,acid:fAcid,police:fPolice,disco:fDisco,eyes:fEyes,heart:fHeart2,belly:fBelly,syringe:fSyringe,gun:fGun,alpen:fAlpen,lightning:fLightning,fire:fAce,camper:fCamper};
 const FAT_INFO={lightning:["Lorenzo","Aiuto dall'alto"],ultimate:["Lorenzo (Ultimate)","Fuoricampo"],belly:["Matteo","Smile"],film:["Mattia","Ciak! Si gira"],camper:["Cholo","Trap phone"],disco:["Sena","La festa è finita"],gun:["Difo","La mano de Difos"],bottle:["Zio Massimo","Dieta del campione"],syringe:["Gabriele","Trattamento speciale"],police:["Biagio","Il cantante"],alpen:["Simba","Lungo e duro"],scream:["Mario","Il mio canto libero"],burp:["Peppone","Mi sto solo scaldando"],acid:["Alessio","Piccolo chimico"],head:["Mastro","Testa sulle spalle"],half:["Perna","Et voilà"],fire:["Giupy","Asso nella manica"],magic:["Simone","Magia!"],mine:["Lillo","Sottoterra"],pray:["Tano","Tutti devoti"]};
