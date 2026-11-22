@@ -101,7 +101,7 @@ details{margin-top:8px;color:var(--mut)}summary{cursor:pointer;min-height:32px}
 #cfgt{width:74%;display:flex;flex-direction:column;gap:.32cqw}
 .cr{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.15fr;gap:.6cqw;align-items:center;font:600 1.25cqw system-ui,sans-serif}.cr.ch{color:#a89686;font-size:1cqw;text-transform:uppercase;letter-spacing:.08em}
 .cr button{min-height:0;padding:.42cqw .5cqw;font-size:1.2cqw;background:#1d1310;border-color:#5a3a2a}.cr button.w{background:var(--acc);border-color:#ffd24c;color:#1b0d06}
-#cfgmoves{width:74%;max-height:30%;overflow:auto;font:500 1cqw system-ui,sans-serif;color:#e8d8c4}#cfgmoves .mh{font:400 1.6cqw 'Metal Mania',Impact,sans-serif;color:#ffd24c;margin:.3cqw 0}#cfgmoves .mt{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:.15cqw .8cqw}#cfgmoves .th{color:#ffb070;font-weight:700}#cfgmoves .mn{color:#fff}
+#cfgmoves{width:80%;max-height:72%;overflow:auto;font:500 1.15cqw system-ui,sans-serif;color:#e8d8c4}#cfgmoves .mt>span{padding:.12cqw 0;border-bottom:1px solid rgba(255,200,150,.1)}#cfgmoves .mh{font:400 1.6cqw 'Metal Mania',Impact,sans-serif;color:#ffd24c;margin:.3cqw 0}#cfgmoves .mt{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:.15cqw .8cqw}#cfgmoves .th{color:#ffb070;font-weight:700}#cfgmoves .mn{color:#fff}
 #cfgmsg{margin:0;width:74%;text-align:center;color:#c9b6a2;font:500 1.05cqw system-ui,sans-serif;min-height:2.6em}
 #cfg .row button{min-height:0;padding:.6cqw 1.6cqw;font-size:1.25cqw}
 .cred{margin-top:14px;color:var(--mut);font-size:12px}
@@ -134,7 +134,7 @@ table{border-collapse:collapse;width:100%;max-width:560px}td,th{padding:4px 12px
 <div id="vs" class="ov" hidden><div class="vsb b1"><img id="vf1" alt=""><b id="vn1"></b></div><div class="vsb b2"><img id="vf2" alt=""><b id="vn2"></b></div><div class="vsx">VS</div><p id="vstxt"></p><div class="pb"><i id="vsbar"></i></div></div>
 <div id="home" class="ov" hidden><div id="hfig"></div><div class="hlogo"><span class="l1">CAFUDDRA!</span><span class="l2">picchiaduro tra amici</span></div><p id="hsub"></p><nav id="hmenu" aria-label="Menu"></nav>
 <div id="honline" hidden><input id="hcode" maxlength="5" placeholder="Codice" aria-label="Codice partita" autocomplete="off"><button id="hjoin">Entra</button><span id="hnet" aria-live="polite"></span></div><p class="hhint">W S per scegliere · J o Invio per confermare · K o Esc per tornare</p></div>
-<div id="pausa" class="ov" hidden><h2>Pausa</h2><div id="pmenu"></div></div><div id="cfg" class="ov" hidden><h2>Comandi</h2><div id="cfgt"></div><p id="cfgmsg"></p><div class="row"><button id="cfgreset">Ripristina</button><button id="cfgclose" class="main">Fatto</button></div></div>
+<div id="pausa" class="ov" hidden><h2>Pausa</h2><div id="pmenu"></div></div><div id="cfg" class="ov" hidden><h2>Comandi</h2><div id="cfgt"></div><p id="cfgmsg"></p><div class="row"><button id="cfgtab">Tutte le mosse</button><button id="cfgreset">Ripristina</button><button id="cfgclose" class="main">Fatto</button></div></div>
 <div id="toast" hidden></div><div id="load" class="ov" hidden><p id="loadtxt">Carico…</p><div class="pb"><i id="loadbar"></i></div></div></div>
 <div class="bar" id="touch"></div>
 <div id="extra" hidden>

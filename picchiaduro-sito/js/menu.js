@@ -47,29 +47,34 @@ function menuKey(e){if(HOME.cfg){e.preventDefault();cfgKey(e);return true}if(!HO
  if(k==='KeyW'||k==='ArrowUp'){e.preventDefault();homeMove(-1)}else if(k==='KeyS'||k==='ArrowDown'){e.preventDefault();homeMove(1)}else if(k==='KeyA'||k==='ArrowLeft'){e.preventDefault();homeMove(HOME.panel==='fat'?-1:-1)}else if(k==='KeyD'||k==='ArrowRight'){e.preventDefault();homeMove(1)}
  else if(k==='KeyJ'||k==='Enter'||k==='Space'){e.preventDefault();homeOk()}else if(k==='KeyK'||k==='Escape'||k==='Backspace'){e.preventDefault();homeBack()}return true}
 function homePoll(){if(!HOME.open&&!HOME.cfg)return false;const ps=pads();padStatus(ps);const q=HOME.cfg&&HOME.wait&&HOME.wait.pad?(ps.find(x=>x.buttons.some(y=>y.pressed))||ps[0]):padAny(ps);if(!q)return true;const b=n=>!!(q.buttons[n]&&q.buttons[n].pressed),o=HOME.pad;
- if(HOME.cfg){if(HOME.wait&&HOME.wait.pad){if(!HOME.wait.arm){if(!q.buttons.some(x=>x.pressed))HOME.wait.arm=1}else{const i=q.buttons.findIndex(x=>x.pressed);if(i>=0){cfgSetPad(HOME.wait.a,i)}}}else{const c=b(1);if(c&&!o.c)closeCfg();o.c=c}return true}
+ if(HOME.cfg){if(HOME.wait&&HOME.wait.pad){if(!HOME.wait.arm){if(!q.buttons.some(x=>x.pressed))HOME.wait.arm=1}else{const i=q.buttons.findIndex(x=>x.pressed);if(i>=0){cfgSetPad(HOME.wait.a,i)}}}else{const c=b(1),tr=b(3);if(c&&!o.c)closeCfg();else if(tr&&!o.tr)cfgTab();o.c=c;o.tr=tr;if(HOME.mosse){const ay=(q.axes&&q.axes[1])||0,dv=(b(13)||ay>.5?1:0)-(b(12)||ay<-.5?1:0);if(dv)$('cfgmoves').scrollTop+=dv*9}}return true}
  const ay=q.axes[1]||0,n={u:b(12)||ay<-.5,d:b(13)||ay>.5,x:b(0),c:b(1),s:b(9)},dir=n.u?-1:n.d?1:0;
  if(HOME.open&&ps.some(p=>p.buttons[2]&&p.buttons[2].pressed&&p.buttons[3]&&p.buttons[3].pressed))unlockCostumes();// Quadrato + Triangolo: costumi
  // Quadrato tre volte di fila (entro 1,5 secondi): secondo costume segreto
  if(HOME.open){const sq=ps.some(p=>p.buttons[2]&&p.buttons[2].pressed),t=performance.now();if(sq&&!HOME.sq){HOME.sqT=(HOME.sqT||[]).filter(x=>t-x<1500);HOME.sqT.push(t);if(HOME.sqT.length>=3){HOME.sqT=[];unlockCostumes('quadrato')}}HOME.sq=sq}
  if(dir){if(!o.dir||--HOME.rep<=0){homeMove(dir);HOME.rep=o.dir?7:18}}if((n.x&&!o.x)||(n.s&&!o.s))homeOk();if(n.c&&!o.c)homeBack();HOME.pad=Object.assign(n,{dir:!!dir});return true}
 // ---------- pannello Comandi ----------
-function openCfg(){if(net)return;HOME.cfg=true;HOME.wait=null;$('cfg').hidden=false;cfgDraw();$('wrap').scrollIntoView({block:'nearest'})}
+function cfgTab(){HOME.wait=null;HOME.mosse=!HOME.mosse;cfgDraw();sfx('ui_muovi')}
+function openCfg(){if(net)return;HOME.cfg=true;HOME.wait=null;HOME.mosse=false;$('cfg').hidden=false;cfgDraw();$('wrap').scrollIntoView({block:'nearest'})}
 function closeCfg(){HOME.cfg=false;HOME.wait=null;$('cfg').hidden=true;drawHelp()}
 function cfgDraw(){const t=$('cfgt');t.textContent='';const hd=document.createElement('div');hd.className='cr ch';for(const x of['Azione','Tasto 1','Tasto 2','Controller']){const s=document.createElement('span');s.textContent=x;hd.append(s)}t.append(hd);
  for(const[a,nome]of AZIONI){const r=document.createElement('div');r.className='cr';const s=document.createElement('span');s.textContent=nome;r.append(s);
   for(let i=0;i<2;i++){const b=document.createElement('button'),w=HOME.wait&&!HOME.wait.pad&&HOME.wait.a===a&&HOME.wait.i===i;b.textContent=w?'premi un tasto…':keyName(CFG.k[a][i]);if(w)b.className='w';b.onclick=()=>{HOME.wait={a,i};cfgDraw();b.blur()};r.append(b)}
   if(a==='spartan'){const fx=document.createElement('button');fx.disabled=true;fx.textContent=padBtnName(CFG.p.fat)+' + '+padBtnName(CFG.p.special);r.append(fx);t.append(r);continue}
   const pb=document.createElement('button'),w=HOME.wait&&HOME.wait.pad&&HOME.wait.a===a;pb.textContent=w?'premi un pulsante…':padBtnName(CFG.p[a]);if(w)pb.className='w';pb.onclick=()=>{HOME.wait={a,pad:1,arm:0};cfgDraw();pb.blur()};r.append(pb);t.append(r)}
- movesList();
- $('cfgmsg').textContent=HOME.wait?'Esc per annullare, Canc per togliere il tasto.':'Clicca su un tasto o su un pulsante per cambiarlo. Le levette muovono sempre il lottatore. I menu usano sempre W A S D, J e K (o croce, X e Cerchio).'}
+ movesList();const mv=!!HOME.mosse;t.style.display=mv?'none':'';$('cfgmoves').style.display=mv?'':'none';$('cfgtab').textContent=mv?'Cambia i tasti':'Tutte le mosse';
+ $('cfgmsg').textContent=HOME.mosse?'Scorri per vederle tutte (col controller: croce o levetta). Triangolo o «Cambia i tasti» per tornare ai tasti.':HOME.wait?'Esc per annullare, Canc per togliere il tasto.':'Clicca su un tasto o su un pulsante per cambiarlo. Le levette muovono sempre il lottatore. I menu usano sempre W A S D, J e K (o croce, X e Cerchio).'}
 // elenco di tutte le mosse con i tasti attuali (sotto la tabella dei comandi)
-function moveRows(){const K=a=>CFG.k[a].map(keyName).join(' o ')||'—',Pd=a=>padBtnName(CFG.p[a]);return[
- ['Pugno rapido',K('jab'),Pd('jab')],['Montante sinistro',K('cross'),Pd('cross')],['Calcio',K('kick'),Pd('kick')],['Calcio basso',K('special')+' o giù + '+K('kick'),Pd('special')+' o giù + '+Pd('kick')],
- ['Calcio spartano (rompe la parata)',K('spartan'),Pd('fat')+' + '+Pd('special')],['Parata (tieni premuto)',K('block'),Pd('block')],['Parata bassa','giù + '+K('block'),'giù + '+Pd('block')],
- ['Raffica di pugni',K('jab')+', '+K('jab')+', '+K('cross'),Pd('jab')+', '+Pd('jab')+', '+Pd('cross')],['Ruota e calcio volante','indietro + '+K('kick'),'indietro + '+Pd('kick')],['Spazzata (bassa)','indietro + '+K('special'),'indietro + '+Pd('special')],
- ['Salto · calcio in salto',K('up')+' · in aria '+K('kick'),Pd('up')+' · in aria '+Pd('kick')],['Corsa · scatto indietro','avanti 2 volte · indietro 2 volte','avanti 2 volte · indietro 2 volte'],
- ['Accoppalo (entro 5 s da FINISCILO!)',K('fat')+' + '+K('jab'),Pd('fat')+' + '+Pd('jab')],['Ballo a fine Accoppalo',K('down'),Pd('down')],['Pausa','Esc o P','Options']]}
+function moveRows(){const K=a=>CFG.k[a].map(keyName).join(' o ')||'—',Pd=a=>padBtnName(CFG.p[a]),IN='indietro (via dall\'avversario)',INp='indietro (levetta o croce)',GI='giù',GIp='giù (levetta o croce)';return[
+ ['— Pugni —','',''],['Pugno rapido',K('jab'),Pd('jab')],['Montante sinistro',K('cross'),Pd('cross')],
+ ['Raffica di pugni (combo)',K('jab')+', '+K('jab')+', '+K('cross')+' (veloce)',Pd('jab')+', '+Pd('jab')+', '+Pd('cross')+' (veloce)'],['Pugno rapido + montante (combo, appena il pugno colpisce)',K('jab')+', '+K('cross'),Pd('jab')+', '+Pd('cross')],['Pugno rapido + calcio (combo)',K('jab')+', '+K('kick'),Pd('jab')+', '+Pd('kick')],['Montante + calcio (combo)',K('cross')+', '+K('kick'),Pd('cross')+', '+Pd('kick')],
+ ['Pugno in salto',K('up')+', in aria '+K('jab'),Pd('up')+' o levetta su, in aria '+Pd('jab')],
+ ['— Calci —','',''],['Calcio',K('kick'),Pd('kick')],['Calcio basso',K('special')+' o '+GI+' + '+K('kick'),Pd('special')+' o '+GIp+' + '+Pd('kick')],
+ ['Ruota e calcio volante',IN+' + '+K('kick'),INp+' + '+Pd('kick')],['Spazzata (colpo basso)',IN+' + '+K('special'),INp+' + '+Pd('special')],
+ ['Calcio in salto',K('up')+', in aria '+K('kick'),Pd('up')+' o levetta su, in aria '+Pd('kick')],['Calcio spartano (rompe la parata)',K('spartan'),Pd('fat')+' + '+Pd('special')],
+ ['— Difesa e movimento —','',''],['Parata (tieni premuto)',K('block'),Pd('block')],['Parata bassa',GI+' + '+K('block'),GIp+' + '+Pd('block')],
+ ['Corsa · scatto indietro','avanti 2 volte · indietro 2 volte','avanti 2 volte · indietro 2 volte (levetta o croce)'],
+ ['— Fine incontro —','',''],['Accoppalo (entro 5 s da FINISCILO!)',K('fat')+' + '+K('jab'),Pd('fat')+' + '+Pd('jab')],['Ballo a fine Accoppalo',K('down'),Pd('down')],['Pausa','Esc o P','Options']]}
 function movesList(){let el=$('cfgmoves');if(!el){el=document.createElement('div');el.id='cfgmoves';$('cfgt').after(el)}el.textContent='';const h=document.createElement('div');h.className='mh';h.textContent='Tutte le mosse';el.append(h);
  const tb=document.createElement('div');tb.className='mt';for(const r of[['Mossa','Tastiera','Controller'],...moveRows()])for(const[i,c]of r.entries()){const d=document.createElement('span');d.textContent=c;if(r[0]==='Mossa')d.className='th';else if(!i)d.className='mn';tb.append(d)}el.append(tb)}
 function cfgKey(e){const w=HOME.wait;if(!w||w.pad){if(e.code==='Escape'){if(w){HOME.wait=null;cfgDraw()}else closeCfg()}return}
@@ -82,12 +87,12 @@ function drawHelp(){const K=a=>CFG.k[a].map(keyName).join(' o ')||'—',Pd=a=>pa
  ['Muoversi',[K('left'),K('right')].join(' · '),Pd('left')+', '+Pd('right')+' o levetta'],['Saltare, abbassarsi',K('up')+' · '+K('down'),Pd('up')+', '+Pd('down')+' o levetta'],
  ['Corsa','due volte avanti (e tieni premuto)','due volte avanti'],['Scatto indietro','due volte indietro','due volte indietro'],
  ['Pugno rapido',K('jab'),Pd('jab')],['Montante sinistro',K('cross'),Pd('cross')],['Calcio',K('kick'),Pd('kick')],['Calcio basso',K('special')+' (o giù + '+K('kick')+')',Pd('special')+' (o giù + '+Pd('kick')+')'],['Parata',K('block'),Pd('block')],
- ['Ruota con calcio e calcio volante','indietro + '+K('kick'),'indietro (levetta o croce) + '+Pd('kick')],['Spazzata (colpo basso)','indietro + '+K('special'),'indietro (levetta o croce) + '+Pd('special')],['Raffica di pugni',K('jab')+', '+K('jab')+', '+K('cross'),Pd('jab')+', '+Pd('jab')+', '+Pd('cross')],
+ ['Ruota con calcio e calcio volante','indietro + '+K('kick'),'indietro (levetta o croce) + '+Pd('kick')],['Spazzata (colpo basso)','indietro + '+K('special'),'indietro (levetta o croce) + '+Pd('special')],['Raffica di pugni',K('jab')+', '+K('jab')+', '+K('cross'),Pd('jab')+', '+Pd('jab')+', '+Pd('cross')],['Combo: pugno rapido + montante, pugno rapido + calcio, montante + calcio (appena il primo colpisce)',K('jab')+', '+K('cross')+' · '+K('jab')+', '+K('kick')+' · '+K('cross')+', '+K('kick'),Pd('jab')+', '+Pd('cross')+' · '+Pd('jab')+', '+Pd('kick')+' · '+Pd('cross')+', '+Pd('kick')],['Pugno e calcio in salto',K('up')+', in aria '+K('jab')+' o '+K('kick'),Pd('up')+' o levetta su, in aria '+Pd('jab')+' o '+Pd('kick')],
  ['Calcio spartano (rompe la parata)',K('spartan'),Pd('fat')+' + '+Pd('special')],['Accoppalo: dopo il K.O. del terzo round vinto, entro 5 secondi',K('fat')+' + '+K('jab'),'R2 + Quadrato'],['Pausa','Esc o P','Options (Start)'],['Ballo a fine Accoppalo',K('down'),Pd('down')],
  ['Ricomincia',K('reset'),Pd('reset')],['Nei menu: muoversi, confermare, indietro','W A S D, J o Invio, K o Esc','Croce, X, Cerchio']];
  t.textContent='';rows.forEach((r,i)=>{const tr=document.createElement('tr');for(const c of r){const d=document.createElement(i?'td':'th');d.textContent=c;tr.append(d)}t.append(tr)});
  document.querySelectorAll('#moves button[data-act] kbd').forEach(k=>{k.textContent=keyName(CFG.k[k.parentNode.dataset.act][0])})}
-function buildMenu(){$('cfgclose').onclick=()=>closeCfg();$('cfgreset').onclick=()=>cfgReset();$('hjoin').onclick=()=>{HOME.cur=1;homeItems()[1].fn()};$('hcode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('hjoin').click()}});drawHelp()}
+function buildMenu(){$('cfgclose').onclick=()=>closeCfg();$('cfgtab').onclick=()=>{cfgTab();$('cfgtab').blur()};$('cfgreset').onclick=()=>cfgReset();$('hjoin').onclick=()=>{HOME.cur=1;homeItems()[1].fn()};$('hcode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('hjoin').click()}});drawHelp()}
 
 // ---------- pausa (Start / Esc) ----------
 const PAUSE={open:false,cur:0,pad:{},items:[]};
