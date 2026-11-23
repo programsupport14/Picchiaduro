@@ -1095,7 +1095,9 @@ function mineInit(){if(typeof PROPS==='undefined'||PROPS.mine)return;const G=new
 const redMats=c=>c.rig.mats||[c.rig.m];
 function redOn(c,u){for(const m of redMats(c)){if(!m.userData.c0){m.userData.c0=m.color.getHex();m.userData.e0=m.emissive?m.emissive.getHex():0}m.color.setHex(m.userData.c0).lerp(new THREE.Color(0xff1a0a),u);if(m.emissive)m.emissive.setHex(0xff1800)}c.glow=.34*u}
 function redOff(c){if(!c||!c.rig)return;for(const m of redMats(c))if(m.userData.c0!=null){m.color.setHex(m.userData.c0);if(m.emissive)m.emissive.setHex(m.userData.e0);delete m.userData.c0}c.glow=0}
-function mineEnd(){const G=PROPS.mine;if(!G)return;G.visible=false;G.userData.L.intensity=0;if(PROPS.mv){const v=PROPS.mv;redOff(v);v.fy=0;v.yawO=null;v.rig.G.rotation.z=0;v.rig.G.rotation.order='XYZ';PROPS.mv=null}}
+// rimette a posto un lottatore che un Accoppalo ha girato, colorato o alzato (chiamata a ogni nuovo round: niente lottatori rossi o piegati nelle partite dopo)
+function bodyReset(c){if(!c||!c.rig)return;redOff(c);c.glow=0;c.fy=0;c.yawO=null;const G=c.rig.G;G.rotation.order='XYZ';G.rotation.x=0;G.rotation.z=0}
+function mineEnd(){PROPS.land=0;const G=PROPS.mine;if(!G)return;G.visible=false;G.userData.L.intensity=0;if(PROPS.mv){const v=PROPS.mv;redOff(v);v.fy=0;v.yawO=null;v.rig.G.rotation.z=0;v.rig.G.rotation.order='XYZ';PROPS.mv=null}}
 function fMine(T,k,v,f){propsInit();mineInit();pose3D(k);pose3D(v);holdFrame();const G=PROPS.mine,L=G.userData.L,J=()=>Math.random()-.5;
  const STAND=P({h:600,t:-2,hd:4,tw:16,n:[45,240],f:[35,245],nl:[-300,0,0],fl:[240,0,0]});
  if(T===1){v.fpose=DAZE();v.fk=.2;k.fpose=STAND;k.fk=.15;CUT((k.x+v.x)/2,330,1.1,{yaw:-f*.12,dol:.001});PROPS.mv=v;PROPS.mx=null;PROPS.land=0;v.fy=0}
@@ -1110,7 +1112,7 @@ function fMine(T,k,v,f){propsInit();mineInit();pose3D(k);pose3D(v);holdFrame();c
  if(PROPS.mx!=null&&T>44&&!PROPS.land){PROPS.vy+=1.3;v.y=Math.min(680,v.y+PROPS.vy);v.x=PROPS.mx;if(v.y>=680&&T>60){PROPS.land=T;sfx('thud');shake=12}}
  // 3) sezione del terreno
  if(T===64){G.visible=true;G.position.set(PROPS.mx,0,0);G.scale.x=f;CUT(PROPS.mx+f*190,-170,.46,{yaw:0,pitch:0,dol:0})}
- if(PROPS.land){const a=T-PROPS.land,R=v.rig.G,w=Math.min(1,a/14),e=w*w*(3-2*w);v.fclip=null;v.fpose=P({h:612,t:-3,hd:-6,tw:0,n:[40,250],f:[30,255],nl:[-60,0,0],fl:[60,0,0]});v.fk=.3;v.yawO=-f*Math.PI/2;R.rotation.order='ZYX';R.rotation.z=-f*Math.PI/2*e;v.y=680+(R.scale.y+600-680)*e;v.x=PROPS.mx+f*Math.min(250,a*6);
+ if(PROPS.land&&T<330&&PROPS.mv){const a=T-PROPS.land,R=v.rig.G,w=Math.min(1,a/14),e=w*w*(3-2*w);v.fclip=null;v.fpose=P({h:612,t:-3,hd:-6,tw:0,n:[40,250],f:[30,255],nl:[-60,0,0],fl:[60,0,0]});v.fk=.3;v.yawO=-f*Math.PI/2;R.rotation.order='ZYX';R.rotation.z=-f*Math.PI/2*e;v.y=680+(R.scale.y+600-680)*e;v.x=PROPS.mx+f*Math.min(250,a*6);
   const u=Math.max(0,Math.min(1,(a-24)/40));redOn(v,u);L.intensity=u*3.2;if(a===24)sfx('sfrigolio');if(a===30)sfx('fuoco');if(a===70)CUT(PROPS.mx+f*300,-560,.95,{yaw:-f*.06,pitch:.02,dol:.0005});if(a===130)CUT(PROPS.mx+f*190,-170,.46,{yaw:0,pitch:0,dol:0})}
  // 4) saluto militare sopra la buca
  if(T===150){k.fpose=P({h:604,t:-4,hd:-6,tw:30,n:[70,-150],f:[30,250],nl:[-300,0,0],fl:[240,0,0]});k.fk=.2;sfx('stoffa')}

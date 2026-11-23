@@ -63,7 +63,7 @@ function cfgDraw(){const t=$('cfgt');t.textContent='';const hd=document.createEl
   if(a==='spartan'){const fx=document.createElement('button');fx.disabled=true;fx.textContent=padBtnName(CFG.p.fat)+' + '+padBtnName(CFG.p.special);r.append(fx);t.append(r);continue}
   const pb=document.createElement('button'),w=HOME.wait&&HOME.wait.pad&&HOME.wait.a===a;pb.textContent=w?'premi un pulsante…':padBtnName(CFG.p[a]);if(w)pb.className='w';pb.onclick=()=>{HOME.wait={a,pad:1,arm:0};cfgDraw();pb.blur()};r.append(pb);t.append(r)}
  movesList();const mv=!!HOME.mosse;t.style.display=mv?'none':'';$('cfgmoves').style.display=mv?'':'none';$('cfgtab').textContent=mv?'Cambia i tasti':'Tutte le mosse';
- $('cfgmsg').textContent=HOME.mosse?'Scorri per vederle tutte (col controller: croce o levetta). Triangolo o «Cambia i tasti» per tornare ai tasti.':HOME.wait?'Esc per annullare, Canc per togliere il tasto.':'Clicca su un tasto o su un pulsante per cambiarlo. Le levette muovono sempre il lottatore. I menu usano sempre W A S D, J e K (o croce, X e Cerchio).'}
+ $('cfgmsg').textContent=HOME.mosse?'Scorri per vederle tutte (frecce, croce o levetta). M, Triangolo o «Cambia i tasti» per tornare ai tasti.':HOME.wait?'Esc per annullare, Canc per togliere il tasto.':'Clicca su un tasto o su un pulsante per cambiarlo. M o Triangolo: tutte le mosse. Le levette muovono sempre il lottatore. I menu usano sempre W A S D, J e K (o croce, X e Cerchio).'}
 // elenco di tutte le mosse con i tasti attuali (sotto la tabella dei comandi)
 function moveRows(){const K=a=>CFG.k[a].map(keyName).join(' o ')||'—',Pd=a=>padBtnName(CFG.p[a]),IN='indietro (via dall\'avversario)',INp='indietro (levetta o croce)',GI='giù',GIp='giù (levetta o croce)';return[
  ['— Pugni —','',''],['Pugno rapido',K('jab'),Pd('jab')],['Montante sinistro',K('cross'),Pd('cross')],
@@ -72,12 +72,12 @@ function moveRows(){const K=a=>CFG.k[a].map(keyName).join(' o ')||'—',Pd=a=>pa
  ['— Calci —','',''],['Calcio',K('kick'),Pd('kick')],['Calcio basso',K('special')+' o '+GI+' + '+K('kick'),Pd('special')+' o '+GIp+' + '+Pd('kick')],
  ['Ruota e calcio volante',IN+' + '+K('kick'),INp+' + '+Pd('kick')],['Spazzata (colpo basso)',IN+' + '+K('special'),INp+' + '+Pd('special')],
  ['Calcio in salto',K('up')+', in aria '+K('kick'),Pd('up')+' o levetta su, in aria '+Pd('kick')],['Calcio spartano (rompe la parata)',K('spartan'),Pd('fat')+' + '+Pd('special')],
- ['— Difesa e movimento —','',''],['Parata (tieni premuto)',K('block'),Pd('block')],['Parata bassa',GI+' + '+K('block'),GIp+' + '+Pd('block')],
+ ['— Difesa e movimento —','',''],['Fiato (barra azzurra sotto la vita): ogni colpo lo consuma, torna da solo; ripetere lo stesso colpo costa di più','—','—'],['Parata (tieni premuto)',K('block'),Pd('block')],['Parata bassa',GI+' + '+K('block'),GIp+' + '+Pd('block')],
  ['Corsa · scatto indietro','avanti 2 volte · indietro 2 volte','avanti 2 volte · indietro 2 volte (levetta o croce)'],
  ['— Fine incontro —','',''],['Accoppalo (entro 5 s da FINISCILO!)',K('fat')+' + '+K('jab'),Pd('fat')+' + '+Pd('jab')],['Ballo a fine Accoppalo',K('down'),Pd('down')],['Pausa','Esc o P','Options']]}
 function movesList(){let el=$('cfgmoves');if(!el){el=document.createElement('div');el.id='cfgmoves';$('cfgt').after(el)}el.textContent='';const h=document.createElement('div');h.className='mh';h.textContent='Tutte le mosse';el.append(h);
  const tb=document.createElement('div');tb.className='mt';for(const r of[['Mossa','Tastiera','Controller'],...moveRows()])for(const[i,c]of r.entries()){const d=document.createElement('span');d.textContent=c;if(r[0]==='Mossa')d.className='th';else if(!i)d.className='mn';tb.append(d)}el.append(tb)}
-function cfgKey(e){const w=HOME.wait;if(!w||w.pad){if(e.code==='Escape'){if(w){HOME.wait=null;cfgDraw()}else closeCfg()}return}
+function cfgKey(e){const w=HOME.wait;if(!w||w.pad){if(e.code==='Escape'){if(w){HOME.wait=null;cfgDraw()}else closeCfg()}else if(!w&&(e.code==='KeyM'||e.code==='Tab'))cfgTab();else if(!w&&HOME.mosse&&(e.code==='ArrowDown'||e.code==='ArrowUp'||e.code==='KeyS'||e.code==='KeyW'))$('cfgmoves').scrollTop+=(e.code==='ArrowDown'||e.code==='KeyS'?1:-1)*40;else if(!w&&(e.code==='Enter'||e.code==='Space')&&document.activeElement&&document.activeElement.tagName==='BUTTON'&&$('cfg').contains(document.activeElement))document.activeElement.click();return}
  if(e.code==='Escape'){HOME.wait=null;cfgDraw();return}if(e.code==='Delete'){if(CFG.k[w.a].length>1)CFG.k[w.a].splice(w.i,1);HOME.wait=null;cfgSave();cfgDraw();return}
  const c=e.code;if(!c||/^(Meta|OS|F\d+$)/.test(c))return;for(const a in CFG.k)CFG.k[a]=CFG.k[a].filter(x=>x!==c);const L=CFG.k[w.a];L[Math.min(w.i,L.length)]=c;CFG.k[w.a]=L.filter(Boolean).slice(0,2);HOME.wait=null;cfgSave();cfgDraw();sfx('ui_ok')}
 function cfgSetPad(a,i){const old=CFG.p[a];for(const k in CFG.p)if(CFG.p[k]===i)CFG.p[k]=old;CFG.p[a]=i;HOME.wait=null;HOME.pad={c:true,x:true};cfgSave();cfgDraw();sfx('ui_ok')}
@@ -92,7 +92,7 @@ function drawHelp(){const K=a=>CFG.k[a].map(keyName).join(' o ')||'—',Pd=a=>pa
  ['Ricomincia',K('reset'),Pd('reset')],['Nei menu: muoversi, confermare, indietro','W A S D, J o Invio, K o Esc','Croce, X, Cerchio']];
  t.textContent='';rows.forEach((r,i)=>{const tr=document.createElement('tr');for(const c of r){const d=document.createElement(i?'td':'th');d.textContent=c;tr.append(d)}t.append(tr)});
  document.querySelectorAll('#moves button[data-act] kbd').forEach(k=>{k.textContent=keyName(CFG.k[k.parentNode.dataset.act][0])})}
-function buildMenu(){$('cfgclose').onclick=()=>closeCfg();$('cfgtab').onclick=()=>{cfgTab();$('cfgtab').blur()};$('cfgreset').onclick=()=>cfgReset();$('hjoin').onclick=()=>{HOME.cur=1;homeItems()[1].fn()};$('hcode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('hjoin').click()}});drawHelp()}
+function buildMenu(){$('cfgclose').onclick=()=>closeCfg();$('cfgtab').onclick=()=>{cfgTab();$('cfgtab').blur()};$('cfgtab').addEventListener('touchend',e=>{e.preventDefault();cfgTab()});$('cfgreset').onclick=()=>cfgReset();$('hjoin').onclick=()=>{HOME.cur=1;homeItems()[1].fn()};$('hcode').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('hjoin').click()}});drawHelp()}
 
 // ---------- pausa (Start / Esc) ----------
 const PAUSE={open:false,cur:0,pad:{},items:[]};
