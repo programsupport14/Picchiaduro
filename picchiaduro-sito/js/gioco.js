@@ -568,7 +568,9 @@ async function ensureMatch(){if(!p1||!MATCH){const id=available()[0].id;await st
   if((home&&e.code==='KeyJ'&&held.has('KeyI'))||(e.code==='KeyI'&&held.has('KeyJ')&&t-jT<500)){e.preventDefault();e.stopImmediatePropagation();unlockCostumes();if(SEL.open)drawSel();return}
   if(home&&e.code==='KeyK'&&!e.repeat){if(t-kT<450)unlockCostumes();kT=t}
   if(home&&e.code==='KeyL'&&!e.repeat){lT=lT.filter(x=>t-x<1500);lT.push(t);if(lT.length>=3){lT=[];unlockCostumes('quadrato')}}},true);addEventListener('keyup',e=>held.delete(e.code));
- addEventListener('pointerdown',e=>{if(typeof HOME==='undefined'||!HOME.open||!e.target.closest||!e.target.closest('.hlogo'))return;const t=performance.now();tap=tap.filter(x=>t-x<2500);tap.push(t);if(tap.length>=5){tap=[];unlockCostumes()}})}
+ addEventListener('pointerdown',e=>{if(typeof HOME==='undefined'||!HOME.open||!inLogo(e))return;const t=performance.now();tap=tap.filter(x=>t-x<2500);tap.push(t);if(tap.length>=5){tap=[];unlockCostumes(SBL.chrollo?'quadrato':'chrollo')}})}
+// la scritta CAFUDDRA! non riceve i tocchi (pointer-events:none): si controlla se il tocco cade nel suo rettangolo. Sulla scritta e sulla figura di Lorenzo il doppio tocco non cambia lo schermo intero
+function inLogo(e){const l=document.querySelector('#home:not([hidden]) .hlogo .l1');if(!l)return false;const r=l.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom}
 let DBG=false;addEventListener('keydown',e=>{if(e.code==='F1'){e.preventDefault();DBG=!DBG;FXD=1}});
 function dbgDraw(){const R=(b,col)=>{g.fillStyle=`rgba(${col},.22)`;g.strokeStyle=`rgba(${col},.95)`;g.lineWidth=2;g.fillRect(b.x0,GROUND-b.y1,b.x1-b.x0,b.y1-b.y0);g.strokeRect(b.x0,GROUND-b.y1,b.x1-b.x0,b.y1-b.y0)},cols=['70,160,255','60,210,120','250,205,60'];
  for(const c of[p1,p2]){if(!c||c.gone)continue;if(!c.ko)for(const b of hurtBoxes(c))R(b,c.block?'170,170,190':cols[b.z]);const M=c.m&&MOVES[c.m];if(M&&(M.hit||M.hits))for(const H of M.hits||[M.hit])if(c.t>=H.from&&c.t<=H.to)R(hitBox(c,H),'255,45,45');

@@ -6,7 +6,7 @@ function fsToggle(){try{if(FS.on()){(document.exitFullscreen||document.webkitExi
 const fsLabel=()=>FS.on()?'Esci dallo schermo intero':'Schermo intero';
 (function(){const wrap=document.getElementById('wrap');if(!wrap)return;
  const fb=document.createElement('button');fb.id='fsbtn';fb.title='Schermo intero';fb.textContent='⛶';fb.onclick=e=>{e.stopPropagation();fsToggle()};wrap.append(fb);
- wrap.addEventListener('dblclick',e=>{if(e.target.closest('button,input'))return;fsToggle()});
+ wrap.addEventListener('dblclick',e=>{if(e.target.closest('button,input,.tocca'))return;if(typeof inLogo==='function'&&inLogo(e))return;fsToggle()});
  const sync=()=>{document.body.classList.toggle('fs',FS.on());if(typeof HOME!=='undefined'&&HOME.open&&typeof homeDraw==='function')homeDraw()};document.addEventListener('fullscreenchange',sync);document.addEventListener('webkitfullscreenchange',sync);
  // ---- comandi a tocco (solo su schermi touch) ----
  const tc=document.createElement('div');tc.id='tc';tc.innerHTML='<div class="stick"><div class="knob"></div></div><div class="pads"><button data-k="cross" class="tri">△</button><button data-k="jab" class="sq">□</button><button data-k="special" class="ci">○</button><button data-k="kick" class="cr">✕</button></div><button data-k="spartan" class="sp">SPARTANO<br><small>R2+○</small></button><button data-k="block" class="r1">R1<br><small>parata</small></button><button data-k="start" class="st">❚❚</button><button data-k="fat" class="fat" hidden>MOSSA<br>FINALE</button>';wrap.append(tc);
